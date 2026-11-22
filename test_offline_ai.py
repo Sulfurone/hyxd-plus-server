@@ -116,6 +116,25 @@ class AITests(unittest.TestCase):
         self.assertFalse(self.hit())
         self.assertIs(self.owner.clientEquipsAndInv, self.inventory)
 
+    def test_round_death_finishes_match_without_practice_respawn(self):
+        self.state['local_round'] = {'phase': 'active'}
+        self.state['finish_local_round'] = Mock()
+        self.owner.hp = 1000
+        self.hit()
+        self.state['finish_local_round'].assert_called_once_with(False, 'bullet')
+        self.assertNotIn('player_respawn_at', self.state)
+
+    def test_active_round_cannot_use_practice_recovery(self):
+        self.state['local_round'] = {'phase': 'active'}
+        self.owner.hp = 2000
+        self.assertFalse(self.scope['respawn']())
+        self.assertEqual(self.owner.hp, 2000)
+
+    def test_finished_round_stops_native_ai(self):
+        self.state['local_round'] = {'phase': 'finished'}
+        self.scope['update']()
+        self.robot.onClientAIFireTimerRobot.assert_not_called()
+
     def test_native_shot_consumes_one_round(self):
         self.scope['begin_fire'](self.robot, 0, (), [(), (), ()], 1)
         self.assertEqual(self.state['local_targets'][42]['ammo'], 4)

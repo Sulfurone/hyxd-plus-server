@@ -9,12 +9,17 @@ import game
 
 
 def install(player, state, log):
+    current_round = state.get('local_round')
+    if current_round and current_round.get('phase') != 'active':
+        return
     targets = state.setdefault('local_targets', {})
     for entity_id in list(targets):
         entity = BigWorld.entities.get(entity_id)
         if entity is None:
+            if current_round and not targets[entity_id].get('defeated'):
+                current_round['spawned'] = max(0, current_round['spawned'] - 1)
             del targets[entity_id]
-        elif sum((a - b) ** 2 for a, b in zip(entity.position, player.position)) > 2500:
+        elif not current_round and sum((a - b) ** 2 for a, b in zip(entity.position, player.position)) > 2500:
             BigWorld.destroyEntity(entity_id)
             del targets[entity_id]
             log('Local practice target removed outside nearby area id=%r' % entity_id)
@@ -22,12 +27,28 @@ def install(player, state, log):
             entity.maxHp = 10000
             entity.hp = 10000
             targets[entity_id]['native_health_initialized'] = True
+    if current_round and current_round['spawned'] >= current_round['total']:
+        return
     if len(targets) >= state.get('local_enemy_count', 1) or state.get('target_spawn_pending'):
         return
-    state['target_spawn_pending'] = True
+    pending = object()
+    state['target_spawn_pending'] = pending
+
+    def release_budget(entity_id):
+        info = targets.pop(entity_id, None)
+        if (current_round and info and not info.get('defeated')
+                and state.get('local_round') is current_round):
+            current_round['spawned'] = max(0, current_round['spawned'] - 1)
 
     def create_target():
-        state['target_spawn_pending'] = False
+        if state.get('target_spawn_pending') is not pending:
+            return
+        state.pop('target_spawn_pending', None)
+        if state.get('local_round') is not current_round:
+            return
+        if current_round and (current_round.get('phase') != 'active'
+                or current_round['spawned'] >= current_round['total']):
+            return
         try:
             owner = BigWorld.player()
             if owner is None or not owner.inWorld:
@@ -35,12 +56,19 @@ def install(player, state, log):
             origin = owner.position
             yaw = BigWorld.dcursor().yaw
             candidate = None
-            for distance, offset in ((22, 0.6), (20, -0.7), (18, 1.4), (18, -1.4), (8, 0)):
+            fallback, fallback_rank = None, None
+            candidates = [(22, 0.6), (20, -0.7), (18, 1.4), (18, -1.4), (8, 0)]
+            candidates.extend((distance, index * math.pi / 4)
+                              for distance in (8, 16, 28, 40) for index in range(8))
+            for distance, offset in candidates:
                 x = origin.x + math.sin(yaw + offset) * distance
                 z = origin.z + math.cos(yaw + offset) * distance
                 hit = BigWorld.collide(owner.spaceID, (x, origin.y + 2, z),
                                        (x, origin.y - 3, z))
-                if hit is None or abs(hit[0].y - origin.y) > 1.5:
+                if hit is None:
+                    hit = BigWorld.collide(owner.spaceID, (x, origin.y + 12, z),
+                                           (x, origin.y - 60, z))
+                if hit is None or abs(hit[0].y - origin.y) > 60:
                     continue
                 position = Math.Vector3(x, hit[0].y + 0.02, z)
                 if any(sum((a-b)**2 for a,b in zip(position, entity.position)) < 25
@@ -50,11 +78,19 @@ def install(player, state, log):
                 obstruction = BigWorld.collide(owner.spaceID,
                     (origin.x, origin.y + 1.3, origin.z),
                     (position.x, position.y + 1.3, position.z))
-                if obstruction is None:
+                if obstruction is None and abs(hit[0].y - origin.y) <= 1.5:
                     candidate = position
                     break
+                # Roofs and slopes may have no level, visible point. Keep an
+                # original grounded entity nearby rather than blocking the
+                # entire finite round until the player changes elevation.
+                rank = (obstruction is not None, abs(hit[0].y - origin.y), distance)
+                if fallback_rank is None or rank < fallback_rank:
+                    fallback, fallback_rank = position, rank
             if candidate is None:
-                log('Local target deferred: no nearby visible level ground')
+                candidate = fallback
+            if candidate is None:
+                log('Local target deferred: no nearby supported spawn position')
                 return
             info = game.getOfflineAvatarInfo()
             info.update(hp=10000, maxHp=10000, avatarStatus=5)
@@ -65,13 +101,16 @@ def install(player, state, log):
                 raise RuntimeError('Native target entity was not created')
             targets[entity_id] = {'spawn': tuple(candidate), 'ready': False,
                                   'native_health_initialized': True}
+            if current_round:
+                targets[entity_id]['round_id'] = current_round['id']
+                current_round['spawned'] += 1
             log('Local target created id=%r position=%r type=%r' % (
                 entity_id, target.position, type(target).__name__))
 
             def wait_for_model(attempt=0):
                 entity = BigWorld.entities.get(entity_id)
-                if entity is None:
-                    targets.pop(entity_id, None)
+                if entity is None or entity_id not in targets:
+                    release_budget(entity_id)
                     return
                 try:
                     sources = getattr(entity.model, 'sources', ()) if entity.model else ()
@@ -100,7 +139,7 @@ def install(player, state, log):
                         return
                     if attempt >= 20:
                         BigWorld.destroyEntity(entity_id)
-                        targets.pop(entity_id, None)
+                        release_budget(entity_id)
                         log('Local target removed: original body did not load')
                         return
                     if attempt % 5 == 0:
@@ -110,7 +149,7 @@ def install(player, state, log):
                 except Exception:
                     log('Local target setup failed: %s' % traceback.format_exc())
                     BigWorld.destroyEntity(entity_id)
-                    targets.pop(entity_id, None)
+                    release_budget(entity_id)
 
             BigWorld.callback(0.2, wait_for_model)
         except Exception:

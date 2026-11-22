@@ -286,6 +286,8 @@ def install_loot(player, state, log):
         owner.updateEquipmentsAndInvData([], inv.checkSum)
         owner.refreshCurrentAmmo()
 
+    state['refresh_local_inventory'] = refresh_inventory
+
     def pick(item_uuid, count=None, slot=None, subslot=None):
         entry = records.get(item_uuid)
         owner = BigWorld.player()
@@ -463,7 +465,8 @@ def install_loot(player, state, log):
             return
         try:
             owner = BigWorld.player()
-            if owner is not None and owner.inWorld and hasattr(owner, 'power') and owner.power > 0:
+            if (owner is not None and owner.inWorld and owner.hp > 0
+                    and not owner.isDead() and hasattr(owner, 'power') and owner.power > 0):
                 old_power = owner.power
                 heal = 200 if old_power >= 6000 else 100
                 if owner.hp < owner.maxHp:

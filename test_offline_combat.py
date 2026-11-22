@@ -165,6 +165,25 @@ class CombatBridgeTests(unittest.TestCase):
         self.assertFalse(self.commands.attackWithRayWeapon(0, (), (), (), 1, 42, 5 << 5, ()))
         self.assertEqual(target.hp, 10000)
 
+    def test_round_damage_caps_overkill_and_defeat_is_counted_once(self):
+        self.target()
+        self.state['local_targets'][42]['round_id'] = 7
+        self.state['local_round'] = {'id': 7, 'phase': 'active', 'damage': 0}
+        notify = self.state['on_local_enemy_defeated'] = Mock()
+        self.commands.attackWithRayWeapon(0, (), (), (), 1, 42, 1 << 5, ())
+        self.assertEqual(self.state['local_round']['damage'], 10000)
+        notify.assert_called_once_with(42, True)
+        self.assertFalse(self.state['defeat_local_enemy'](42))
+        notify.assert_called_once()
+
+    def test_zone_defeat_does_not_grant_player_kill(self):
+        target = self.target()
+        target.hp = 0
+        notify = self.state['on_local_enemy_defeated'] = Mock()
+        self.assertTrue(self.state['defeat_local_enemy'](42, False))
+        self.assertEqual(self.state.get('battle_kills', 0), 0)
+        notify.assert_called_once_with(42, False)
+
 
 if __name__ == '__main__':
     unittest.main()

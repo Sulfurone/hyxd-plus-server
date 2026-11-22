@@ -45,7 +45,7 @@ def install(player, state, log):
     constants = native['combatconst']
     state['ai_generation'] = state.get('ai_generation', 0) + 1
     generation = state['ai_generation']
-    state.setdefault('ai_enabled', True)
+    state.setdefault('ai_enabled', False)
     state.setdefault('local_enemy_count', 2)
     state.setdefault('battle_checkpoint', tuple(player.position))
     state.setdefault('battle_alive_code', player.lifeCode)
@@ -129,6 +129,9 @@ def install(player, state, log):
     avatar_cls.broadcastfirebulletToRobot = shot_awareness
 
     def respawn():
+        current_round = state.get('local_round')
+        if current_round and current_round.get('phase') in ('deploying', 'active'):
+            return False
         owner = BigWorld.player()
         if owner is None or not owner.inWorld:
             return False
@@ -216,7 +219,11 @@ def install(player, state, log):
             owner.lifeCode = constants.LIFECODE_DEAD
             owner.set_lifeCode(old_life)
             state['battle_deaths'] += 1
-            state['player_respawn_at'] = time.time() + 8
+            current_round = state.get('local_round')
+            if current_round and current_round.get('phase') in ('deploying', 'active'):
+                state['finish_local_round'](False, 'bullet')
+            else:
+                state['player_respawn_at'] = time.time() + 8
             log('Local player defeated deaths=%r nativeDead=%r' % (state['battle_deaths'], owner.isDead()))
         return True
 
@@ -252,7 +259,11 @@ def install(player, state, log):
             respawn_at = state.get('player_respawn_at')
             if respawn_at is not None and now >= respawn_at:
                 respawn()
-            active = state.get('ai_enabled') and owner.hp > 0 and not owner.inParachuting() and not owner.isOnPlane() and not owner.isOnVehicle()
+            current_round = state.get('local_round')
+            round_active = current_round is None or current_round.get('phase') == 'active'
+            active = (state.get('ai_enabled') and round_active and owner.hp > 0
+                and not owner.isDead() and not owner.inParachuting()
+                and not owner.isOnPlane() and not owner.isOnVehicle())
             targets = state.get('local_targets', {})
             for entity_id, info in list(targets.items()):
                 robot = BigWorld.entities.get(entity_id)
@@ -270,7 +281,7 @@ def install(player, state, log):
                 origin = robot.position
                 delta = owner.position - origin
                 distance = math.sqrt(delta.x**2 + delta.z**2)
-                if distance > 60:
+                if distance > 60 and current_round is None:
                     continue
                 aim_from = (origin.x, origin.y + 1.4, origin.z)
                 aim_to = (owner.position.x, owner.position.y + 1.2, owner.position.z)
@@ -282,7 +293,7 @@ def install(player, state, log):
                 matrix = info['motion_matrix']
                 matrix.setRotateY(heading)
                 matrix.translation = origin
-                if visible and distance > 12 and now >= info.get('next_move', 0):
+                if (visible or current_round is not None) and distance > 12 and now >= info.get('next_move', 0):
                     step = min(0.5, 1.5 * elapsed)
                     x = origin.x + math.sin(heading) * step
                     z = origin.z + math.cos(heading) * step
@@ -332,7 +343,8 @@ def install(player, state, log):
                     state['ai_enabled'] = not state.get('ai_enabled')
                     log('Local AI enabled=%r' % state['ai_enabled'])
                 else:
-                    respawn()
+                    if not state.get('local_round'):
+                        respawn()
             return True
         return previous_key(owner, is_down, key, mods)
     type(player).handleKeyEvent = handle_key

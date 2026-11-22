@@ -111,6 +111,38 @@ def install(player, state, log):
 
     command_module.reloadActiveWeapon = reload_active_weapon
 
+    def defeat_target(entity_id, credited=True):
+        targets = state.get('local_targets', {})
+        entry = targets.get(entity_id)
+        target = BigWorld.entities.get(entity_id)
+        if entry is None or target is None or entry.get('defeated'):
+            return False
+        entry['defeated'] = True
+        if credited:
+            state['battle_kills'] = state.get('battle_kills', 0) + 1
+        old_life = target.lifeCode
+        target.lifeCode = constants.LIFECODE_DEAD
+        target.set_lifeCode(old_life)
+        log('Local target defeated id=%r nativeDeath=%r' % (entity_id, target.isDead()))
+        notify = state.get('on_local_enemy_defeated')
+        if notify:
+            notify(entity_id, credited)
+
+        def replace_target():
+            if targets.get(entity_id) is not entry:
+                return
+            if BigWorld.entities.get(entity_id) is not None:
+                BigWorld.destroyEntity(entity_id)
+            targets.pop(entity_id, None)
+            scope = {}
+            execfile('I:/hyxd/hyp/_local_server/offline_targets.py', scope)
+            scope['install'](BigWorld.player(), state, log)
+
+        BigWorld.callback(8, replace_target)
+        return True
+
+    state['defeat_local_enemy'] = defeat_target
+
     def apply_hit(slot, entity_id, encoded_part):
         targets = state.get('local_targets', {})
         entry = targets.get(entity_id)
@@ -128,24 +160,14 @@ def install(player, state, log):
         old_hp = target.hp
         target.hp = max(0, old_hp - damage)
         target.set_hp(old_hp)
+        current_round = state.get('local_round')
+        if (current_round and current_round.get('phase') == 'active'
+                and entry.get('round_id') == current_round['id']):
+            current_round['damage'] += old_hp - target.hp
         log('Local bullet hit id=%r slot=%r part=%r damage=%r hp=%r->%r' % (
             entity_id, slot, part, damage, old_hp, target.hp))
         if target.hp == 0:
-            state['battle_kills'] = state.get('battle_kills', 0) + 1
-            old_life = target.lifeCode
-            target.lifeCode = constants.LIFECODE_DEAD
-            target.set_lifeCode(old_life)
-            log('Local target defeated id=%r nativeDeath=%r' % (entity_id, target.isDead()))
-
-            def replace_target():
-                if BigWorld.entities.get(entity_id) is not None:
-                    BigWorld.destroyEntity(entity_id)
-                targets.pop(entity_id, None)
-                scope = {}
-                execfile('I:/hyxd/hyp/_local_server/offline_targets.py', scope)
-                scope['install'](BigWorld.player(), state, log)
-
-            BigWorld.callback(8, replace_target)
+            defeat_target(entity_id)
         return True
 
     for name in ('attackWithRayWeapon', 'attackWithDestributeWeapon'):
