@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 logs/
+backups/
 *.log
 *.bin
 *.jsonl

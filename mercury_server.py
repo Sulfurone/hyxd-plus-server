@@ -8,6 +8,7 @@ import socketserver
 import struct
 import threading
 import time
+import uuid
 
 from mercury_protocol import channel_packet, channel_packets, login_request
 from mercury_cipher import encrypt, packet_decode, packet_encode
@@ -20,6 +21,9 @@ kernel.OpenProcess.argtypes = [w.DWORD, w.BOOL, w.DWORD]
 kernel.OpenProcess.restype = w.HANDLE
 kernel.CloseHandle.argtypes = [w.HANDLE]
 kernel.QueryFullProcessImageNameW.argtypes = [w.HANDLE, w.DWORD, w.LPWSTR, c.POINTER(w.DWORD)]
+kernel.GetProcessTimes.argtypes = [w.HANDLE, c.POINTER(w.FILETIME),
+                                  c.POINTER(w.FILETIME), c.POINTER(w.FILETIME),
+                                  c.POINTER(w.FILETIME)]
 
 
 def event(**data):
@@ -31,8 +35,6 @@ def event(**data):
 def local_key():
     try:
         meta = json.loads((LOGS / "client_session.json").read_text())
-        if time.time() - meta["captured"] > 600:
-            return None
         handle = kernel.OpenProcess(0x1000, False, meta["pid"])
         if not handle:
             return None
@@ -42,6 +44,14 @@ def local_key():
             if not kernel.QueryFullProcessImageNameW(handle, 0, path, c.byref(size)):
                 return None
             if Path(path.value).resolve() != (HERE.parent / "game/hyp_beta.exe").resolve():
+                return None
+            created, exited, system, user = (w.FILETIME() for _ in range(4))
+            if not kernel.GetProcessTimes(handle, c.byref(created), c.byref(exited),
+                                          c.byref(system), c.byref(user)):
+                return None
+            created_at = ((created.dwHighDateTime << 32) | created.dwLowDateTime)
+            created_at = created_at / 10_000_000 - 11_644_473_600
+            if meta["captured"] < created_at:
                 return None
         finally:
             kernel.CloseHandle(handle)
@@ -138,9 +148,8 @@ def entity_messages(sequence, key, *, acknowledged_sequence):
         fixed_message(1, struct.pack("<I", 1048576)),
         fixed_message(2, bytes([10])),
         fixed_message(3, struct.pack("<I", 1000)),
-        variable_message(5, struct.pack("<II", player_id, 0)),
-        variable_message(6, struct.pack("<II", space_id, 0) + position
-                         + struct.pack("<f", 1.0) + direction),
+        variable_message(5, struct.pack("<IH", player_id, 3)),
+        variable_message(6, struct.pack("<II", space_id, 0) + position + direction),
         geometry_mapping(space_id),
         fixed_message(89, struct.pack("<IB", player_id, 1)),
     ]
@@ -155,6 +164,7 @@ def requests_entities(body):
 
 
 SESSIONS = {}
+SESSION_LOCK = threading.Lock()
 
 
 class LoginHandler(socketserver.BaseRequestHandler):
@@ -165,7 +175,7 @@ class LoginHandler(socketserver.BaseRequestHandler):
         # requests during local integration.
         if len(data) >= 3 and struct.unpack_from("<HB", data)[0:2] == (0, MESSAGE_REPLY):
             return
-        name = "hall_login_%d.bin" % time.time_ns()
+        name = "hall_login_%d_%s.bin" % (time.time_ns(), uuid.uuid4().hex)
         (LOGS / name).write_bytes(data)
         try:
             request = login_request(data)
@@ -185,7 +195,7 @@ class LoginHandler(socketserver.BaseRequestHandler):
 class BaseHandler(socketserver.BaseRequestHandler):
     def handle(self):
         data, endpoint = self.request
-        name = "base_request_%d.bin" % time.time_ns()
+        name = "base_request_%d_%s.bin" % (time.time_ns(), uuid.uuid4().hex)
         (LOGS / name).write_bytes(data)
         peer_port = self.client_address[1]
         event(event="base_datagram", size=len(data), capture=name,
@@ -201,7 +211,9 @@ class BaseHandler(socketserver.BaseRequestHandler):
                 return
             response = base_login_reply(reply_id, key)
             endpoint.sendto(response, self.client_address)
-            SESSIONS[peer_port] = {"sequence": 1, "bootstrap": False}
+            with SESSION_LOCK:
+                SESSIONS[peer_port] = {"sequence": 0, "bootstrap": None,
+                                       "bootstrap_acked": False}
             event(event="base_login_reply", attempt=attempt, size=len(response), capture=name)
             return
         key = local_key()
@@ -212,8 +224,6 @@ class BaseHandler(socketserver.BaseRequestHandler):
             if len(clear) < 3:
                 raise ValueError("short BaseApp packet")
             (LOGS / name.replace(".bin", ".decoded.bin")).write_bytes(clear)
-            session = SESSIONS.setdefault(peer_port, {"sequence": 1,
-                                                     "bootstrap": False})
             for decoded in channel_packets(clear):
                 flags = decoded.flags
                 client_sequence = decoded.sequence
@@ -221,23 +231,32 @@ class BaseHandler(socketserver.BaseRequestHandler):
                       size=len(clear), client_sequence=client_sequence,
                       client_acks=decoded.acks,
                       piggybacks=len(decoded.piggybacks), capture=name)
-                if (client_sequence is not None and not session["bootstrap"]
-                        and requests_entities(decoded.body)):
-                    sequence = session["sequence"]
-                    response = entity_messages(sequence, key,
-                                               acknowledged_sequence=client_sequence)
-                    endpoint.sendto(response, self.client_address)
-                    session["sequence"] += 1
-                    session["bootstrap"] = True
-                    event(event="entity_bootstrap", sequence=sequence,
-                          size=len(response), capture=name)
-                elif (client_sequence is not None
-                      and (flags & FLAG_IS_RELIABLE)
-                      and session.get("last_client_sequence") != client_sequence):
-                    session["last_client_sequence"] = client_sequence
-                    endpoint.sendto(channel_reliable_ack(client_sequence, key),
-                                    self.client_address)
-                    event(event="channel_ack", sequence=client_sequence, capture=name)
+                with SESSION_LOCK:
+                    session = SESSIONS.setdefault(peer_port, {"sequence": 0,
+                        "bootstrap": None, "bootstrap_acked": False})
+                    if session["bootstrap"] is not None and (
+                            session["bootstrap_sequence"] in decoded.acks or
+                            (decoded.cumulative_ack is not None and
+                             decoded.cumulative_ack == session["bootstrap_sequence"] + 1)):
+                        session["bootstrap_acked"] = True
+                    if client_sequence is not None and requests_entities(decoded.body):
+                        if session["bootstrap"] is None:
+                            sequence = session["sequence"]
+                            session["bootstrap"] = entity_messages(
+                                sequence, key, acknowledged_sequence=client_sequence)
+                            session["bootstrap_sequence"] = sequence
+                            session["sequence"] += 1
+                            event(event="entity_bootstrap", sequence=sequence,
+                                  size=len(session["bootstrap"]), capture=name)
+                        if not session["bootstrap_acked"]:
+                            endpoint.sendto(session["bootstrap"], self.client_address)
+                        else:
+                            endpoint.sendto(channel_ack(client_sequence, key),
+                                            self.client_address)
+                    elif client_sequence is not None and (flags & FLAG_IS_RELIABLE):
+                        endpoint.sendto(channel_ack(client_sequence, key),
+                                        self.client_address)
+                        event(event="channel_ack", sequence=client_sequence, capture=name)
         except ValueError as error:
             event(event="base_decode_error", reason=str(error), capture=name)
 

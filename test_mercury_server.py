@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from mercury_cipher import decrypt, packet_decode, packet_encode
-from mercury_protocol import LoginRequest, channel_packet
+from mercury_protocol import LoginRequest, channel_packet, login_request
 from mercury_server import (BaseHandler, Server,
                             channel_ack, channel_reliable_ack, entity_messages,
                             login_reply, packet_decode)
@@ -61,7 +61,18 @@ class LoginReplyTests(unittest.TestCase):
                         client.sendto(packet_encode(enable, b"test"), server.server_address)
                         bootstrap, _ = client.recvfrom(1024)
                         parsed = channel_packet(packet_decode(bootstrap, b"test"))
+                        self.assertEqual(parsed.sequence, 0)
                         self.assertEqual(parsed.acks, (7,))
+                        client.sendto(packet_encode(enable, b"test"), server.server_address)
+                        retransmission, _ = client.recvfrom(1024)
+                        self.assertEqual(retransmission, bootstrap)
+                        client_ack = (struct.pack("<HBI", 0x5c, 1, 0x12345678)
+                                      + struct.pack("<II", 8, 0) + b"\x01")
+                        client.sendto(packet_encode(client_ack, b"test"), server.server_address)
+                        client.recvfrom(1024)
+                        client.sendto(packet_encode(enable, b"test"), server.server_address)
+                        final_ack, _ = client.recvfrom(1024)
+                        self.assertEqual(channel_packet(packet_decode(final_ack, b"test")).acks, (7,))
                         body = parsed.body
                         cursor = 17  # Authenticate, bandwidth, frequency and game time.
                         for expected in (5, 6, 7):
@@ -84,8 +95,8 @@ class LoginReplyTests(unittest.TestCase):
         decoded = packet_decode(entity_messages(2, b"test", acknowledged_sequence=1), b"test")
         self.assertEqual(decoded[2], 0)
         self.assertEqual(struct.unpack_from("<I", decoded, 3)[0], 0x12345678)
-        self.assertIn(b"\x05\x08\x00", decoded)
-        self.assertIn(b"\x06\x24\x00", decoded)
+        self.assertIn(b"\x05\x06\x00" + struct.pack("<IH", 1001, 3), decoded)
+        self.assertIn(b"\x06\x20\x00", decoded)
         self.assertIn(b"\x59" + struct.pack("<IB", 1001, 1), decoded)
 
     def test_channel_ack_includes_both_ack_footers(self):
@@ -100,16 +111,16 @@ class LoginReplyTests(unittest.TestCase):
         self.assertEqual(decoded.body, b"")
         self.assertEqual(decoded.acks, (7,))
 
-    def test_captured_base_login_request_shape(self):
-        # Original capture: header 1/0/8, reply ID 123, next request 0,
-        # session 0x12345678, attempt count 2.
-        data = struct.pack("<HBHIHIIH", 1, 0, 8, 123, 0,
-                           0x12345678, 0, 2)
+    def test_anonymized_base_login_request_shape(self):
+        # Preserve the captured envelope with a deterministic reply ID. Tests
+        # must not depend on private runtime logs being present in the checkout.
+        data = bytes.fromhex("010000080001000000000078563412000000000200")
         self.assertEqual(len(data), 21)
         self.assertEqual(struct.unpack_from("<HBH", data), (1, 0, 8))
         self.assertEqual(struct.unpack_from("<I", data, 11)[0], 0x12345678)
         self.assertEqual(data[15:19], b"\x00" * 4)
         self.assertEqual(struct.unpack_from("<H", data, 19)[0], 2)
+        self.assertEqual(login_request(data), LoginRequest(1, 0x12345678, bytes(4)))
 
 
 if __name__ == "__main__":

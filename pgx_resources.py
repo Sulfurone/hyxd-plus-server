@@ -6,6 +6,15 @@ import struct
 _LITERALS = bytes(value ^ 0xD7 for value in range(256))
 _FINAL_LITERALS = bytes(value ^ 0x14 for value in range(256))
 _MAX_RECORD_SIZE = 8 * 1024 * 1024
+_DIRECTORY_OFFSET_MASK = 0xCDFEFABA
+
+
+def record_offsets(archive):
+    """Yield payload offsets from PGX 3.0.43 directory entries."""
+    for offset in range(len(archive) - 27):
+        pointer = struct.unpack_from("<I", archive, offset + 16)[0]
+        if pointer == offset ^ _DIRECTORY_OFFSET_MASK:
+            yield offset + 24
 
 
 def decode_record(archive, offset):

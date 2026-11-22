@@ -4,13 +4,29 @@
 
 ## 当前状态
 
-- 客户端可启动到登录界面，原版客户端已连接过本机 SDK、账户和大厅端口。
-- 大厅登录包解析、BaseApp 登录、实体初始化时机和地图映射已有实验实现。
-- 原版客户端进入地图并响应角色移动尚未验证，因此项目尚不支持完整单机游玩。
+- 原版 3.0.43 客户端已在本地加载 hukou 地图、默认角色、装备和第三人称镜头；用户确认可以移动和跳跃，位置日志同时验证了移动。
+- 已从关闭的客户端通过一键脚本重新启动并自动进图。当前为离线地图探索模式，完整对局、AI、伤害及服务端战斗逻辑尚未实现。
+- SDK、账户、大厅 UDP 与 BaseApp 为实验实现。离线模式通过可恢复资源补丁调用原客户端逻辑，并补齐界面等待、角色状态和本地模型位置同步。
 
 ## 启动
 
-安装 Python 3 和 `requirements.txt` 中的依赖后运行：
+本机安装位置为 `I:\hyxd\hyp`，服务端目录为 `_local_server`。脚本保留了该机器的路径及 Python 运行时路径；迁移到其他位置时需要调整 `start_offline.ps1` 和 `offline_bootstrap.py`。
+
+在游戏目录中部署本仓库为 `_local_server`，安装 Python 3 和 `requirements.txt` 中的依赖后运行：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File _local_server/start_offline.ps1
+```
+
+脚本校验并安装离线补丁，启动本机服务及原启动器，再使用启动器的实际窗口句柄启动客户端。保留原游戏文件和 `_local_server/backups/entities.before-offline-start.pg`；该备份由补丁首次运行时创建，不包含在仓库中。
+
+关闭游戏后恢复原资源：
+
+```powershell
+python -B _local_server/offline_client_patch.py --restore
+```
+
+单独启动实验协议服务：
 
 ```powershell
 python -B local_stack.py
@@ -24,4 +40,4 @@ python -B local_stack.py
 python -B -m unittest -v test_sdk_auth test_gt_protocol test_mercury_protocol test_mercury_cipher test_mercury_server
 ```
 
-更详细的历史调查记录见 `HANDOFF.md` 和 `README.md`。仓库不包含游戏客户端、官方资源文件或抓包日志。
+`HANDOFF.md` 和 `README.md` 中的调查记录保留历史状态，以本页当前状态为准。仓库不包含游戏客户端、官方资源文件、资源备份或抓包日志。
