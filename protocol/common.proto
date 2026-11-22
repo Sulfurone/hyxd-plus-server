@@ -1,0 +1,4 @@
+// Minimal compatibility dependency; not a dump of the original common.proto.
+syntax = "proto2";
+package gt;
+message Void {}

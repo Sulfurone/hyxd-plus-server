@@ -1,0 +1,933 @@
+{
+  "name": "login.proto",
+  "package": "gt.login",
+  "dependencies": [
+    "common.proto"
+  ],
+  "messages": [
+    {
+      "name": "LogonRequest",
+      "fields": [
+        {
+          "name": "username",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "password",
+          "number": 2,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "cdkey",
+          "number": 3,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "randkey",
+          "number": 4,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "group",
+          "number": 5,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "unisdk",
+          "number": 6,
+          "label": 1,
+          "type": 5,
+          "type_name": "",
+          "default": "0"
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "LogonReply",
+      "fields": [
+        {
+          "name": "type",
+          "number": 1,
+          "label": 2,
+          "type": 14,
+          "type_name": ".gt.login.LogonReply.ReplyType",
+          "default": "NEED_PASSWORD"
+        },
+        {
+          "name": "message",
+          "number": 2,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "urs",
+          "number": 3,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "recheckkey",
+          "number": 4,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": [
+        {
+          "name": "ReplyType",
+          "values": [
+            {
+              "name": "NEED_PASSWORD",
+              "number": 0
+            },
+            {
+              "name": "WAITING",
+              "number": 1
+            },
+            {
+              "name": "PASSWORD_ERR",
+              "number": 2
+            },
+            {
+              "name": "NEED_EKEY",
+              "number": 3
+            },
+            {
+              "name": "EKEY_ERR",
+              "number": 4
+            },
+            {
+              "name": "NEED_MIMAKA",
+              "number": 5
+            },
+            {
+              "name": "MIMAKA_ERR",
+              "number": 6
+            },
+            {
+              "name": "LOGINED",
+              "number": 7
+            },
+            {
+              "name": "MOBILE_MIMA_WARNING",
+              "number": 8
+            },
+            {
+              "name": "LOGIN_RESPONSE_HACK",
+              "number": 9
+            },
+            {
+              "name": "UNISDK_ERR",
+              "number": 16
+            },
+            {
+              "name": "UNISDK_LOGINED",
+              "number": 17
+            },
+            {
+              "name": "QRCODE_SCANNED",
+              "number": 18
+            }
+          ]
+        },
+        {
+          "name": "ReplyMessage",
+          "values": [
+            {
+              "name": "ERR_SAUTH_VERIFY_FAILED",
+              "number": 0
+            },
+            {
+              "name": "ERR_USER_NOT_EXIST",
+              "number": 1
+            },
+            {
+              "name": "ERR_SAUTH_ERROR_ARISE",
+              "number": 2
+            },
+            {
+              "name": "ERR_PASSPORT_ERROR",
+              "number": 3
+            },
+            {
+              "name": "ERR_ILLEGAL_LOGIN",
+              "number": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EkeyRequest",
+      "fields": [
+        {
+          "name": "key",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "MimakaRequest",
+      "fields": [
+        {
+          "name": "key",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "QueryRequest",
+      "fields": [
+        {
+          "name": "username",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "LogonQueryReply",
+      "fields": [
+        {
+          "name": "uuid",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "server_uuid",
+          "number": 2,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "reply",
+          "number": 3,
+          "label": 3,
+          "type": 11,
+          "type_name": ".gt.login.LogonQueryReply.ReplyVal",
+          "default": ""
+        }
+      ],
+      "nested": [
+        {
+          "name": "ReplyVal",
+          "fields": [
+            {
+              "name": "group",
+              "number": 1,
+              "label": 2,
+              "type": 5,
+              "type_name": "",
+              "default": ""
+            },
+            {
+              "name": "server",
+              "number": 2,
+              "label": 2,
+              "type": 5,
+              "type_name": "",
+              "default": ""
+            },
+            {
+              "name": "usernum",
+              "number": 3,
+              "label": 2,
+              "type": 5,
+              "type_name": "",
+              "default": ""
+            }
+          ],
+          "nested": [],
+          "enums": []
+        }
+      ],
+      "enums": []
+    },
+    {
+      "name": "LogonRandKey",
+      "fields": [
+        {
+          "name": "server",
+          "number": 1,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "randkey",
+          "number": 2,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "FetchKeyResponse",
+      "fields": [
+        {
+          "name": "skey",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "rkey",
+          "number": 2,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "FetchKeyRequest",
+      "fields": [
+        {
+          "name": "rkey",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "RegRoleRequest",
+      "fields": [
+        {
+          "name": "roleName",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "UnregRoleRequest",
+      "fields": [
+        {
+          "name": "usrname",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "QueryUrsRequest",
+      "fields": [
+        {
+          "name": "username",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "password",
+          "number": 2,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "QueryUrsResponse",
+      "fields": [
+        {
+          "name": "username",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "reply",
+          "number": 2,
+          "label": 2,
+          "type": 11,
+          "type_name": ".gt.login.LogonReply",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "QRCodeResponse",
+      "fields": [
+        {
+          "name": "qrcode",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "QRCodeRequest",
+      "fields": [
+        {
+          "name": "randkey",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "group",
+          "number": 2,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "unisdk",
+          "number": 3,
+          "label": 1,
+          "type": 5,
+          "type_name": "",
+          "default": "0"
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "ChooseGroupRequest",
+      "fields": [
+        {
+          "name": "group",
+          "number": 1,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "ChooseGroupResponse",
+      "fields": [
+        {
+          "name": "group",
+          "number": 1,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "hostId",
+          "number": 2,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "UniSDKLogonRequest",
+      "fields": [
+        {
+          "name": "group",
+          "number": 1,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "login_channel",
+          "number": 2,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "app_channel",
+          "number": 3,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "platform",
+          "number": 4,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "sdkuid",
+          "number": 5,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "sessionid",
+          "number": 6,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "sdk_version",
+          "number": 7,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "udid",
+          "number": 8,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "deviceid",
+          "number": 9,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "step",
+          "number": 10,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "channel_gameid",
+          "number": 11,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "userid",
+          "number": 12,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "anonymous",
+          "number": 13,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "cpid",
+          "number": 14,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "yh_sdk_channel",
+          "number": 15,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "yh_sdk_uid",
+          "number": 16,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "redirect_uri",
+          "number": 17,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "extra_data",
+          "number": 18,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "get_snlist",
+          "number": 19,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "dist_channel_code",
+          "number": 20,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "gameid",
+          "number": 21,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "cookie",
+          "number": 22,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    },
+    {
+      "name": "UniSDKLogonReply",
+      "fields": [
+        {
+          "name": "status",
+          "number": 1,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "aid",
+          "number": 2,
+          "label": 2,
+          "type": 3,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "urs",
+          "number": 3,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "vipgrade",
+          "number": 4,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "group",
+          "number": 5,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "hostId",
+          "number": 6,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "use_unisdk_test_env",
+          "number": 7,
+          "label": 2,
+          "type": 8,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "sdkuid",
+          "number": 8,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "message",
+          "number": 9,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "recheckkey",
+          "number": 10,
+          "label": 1,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "login_channel",
+          "number": 11,
+          "label": 2,
+          "type": 12,
+          "type_name": "",
+          "default": ""
+        },
+        {
+          "name": "dist_channel_code",
+          "number": 12,
+          "label": 2,
+          "type": 5,
+          "type_name": "",
+          "default": ""
+        }
+      ],
+      "nested": [],
+      "enums": []
+    }
+  ],
+  "services": [
+    {
+      "name": "LoginService",
+      "methods": [
+        {
+          "index": 0,
+          "name": "Logon",
+          "input": ".gt.login.LogonRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 1,
+          "name": "Ekey",
+          "input": ".gt.login.EkeyRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 2,
+          "name": "Mimaka",
+          "input": ".gt.login.MimakaRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 3,
+          "name": "QueryUser",
+          "input": ".gt.login.QueryRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 4,
+          "name": "FetchKey",
+          "input": ".gt.login.FetchKeyRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 5,
+          "name": "regRole",
+          "input": ".gt.login.RegRoleRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 6,
+          "name": "unregRole",
+          "input": ".gt.login.UnregRoleRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 7,
+          "name": "QueryUrs",
+          "input": ".gt.login.QueryUrsRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 8,
+          "name": "QRCode",
+          "input": ".gt.login.QRCodeRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 9,
+          "name": "QRCodeCancel",
+          "input": ".gt.Void",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 10,
+          "name": "ChooseGroup",
+          "input": ".gt.login.ChooseGroupRequest",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 11,
+          "name": "UniSDKLogon",
+          "input": ".gt.login.UniSDKLogonRequest",
+          "output": ".gt.Void"
+        }
+      ]
+    },
+    {
+      "name": "LoginClient",
+      "methods": [
+        {
+          "index": 0,
+          "name": "Reply",
+          "input": ".gt.login.LogonReply",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 1,
+          "name": "QueryReply",
+          "input": ".gt.login.LogonQueryReply",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 2,
+          "name": "LogonKeyToClient",
+          "input": ".gt.login.LogonRandKey",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 3,
+          "name": "OnFetchKey",
+          "input": ".gt.login.FetchKeyResponse",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 4,
+          "name": "OnQueryUrs",
+          "input": ".gt.login.QueryUrsResponse",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 5,
+          "name": "OnQRCode",
+          "input": ".gt.login.QRCodeResponse",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 6,
+          "name": "OnChooseGroup",
+          "input": ".gt.login.ChooseGroupResponse",
+          "output": ".gt.Void"
+        },
+        {
+          "index": 7,
+          "name": "UniSDKReply",
+          "input": ".gt.login.UniSDKLogonReply",
+          "output": ".gt.Void"
+        }
+      ]
+    }
+  ]
+}

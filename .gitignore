@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+logs/
+*.log
+*.bin
+*.jsonl
+!protocol/*.json
+protocol/local_login.key
+*.pem
+*.key
+!oauth.pem
+!oauth.key
+!server.pem
+!server.key
+update.ini.orig

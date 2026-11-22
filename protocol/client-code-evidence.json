@@ -1,0 +1,1828 @@
+[
+  {
+    "address": "0x21b63d54130",
+    "name": "getRandomStr",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "5f01006700006701006d01008300005f0200128301000247",
+    "names": [
+      "int",
+      "random"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "%06d",
+      1000000
+    ],
+    "varnames": []
+  },
+  {
+    "address": "0x21b63d542b0",
+    "name": "__init__",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006701007b00008302006d0200830000086701006d03007b00006404006705006d06007b00008301007b00006407006708006d09007b00006d07008301007b0000640a005f01007b0000640b005f01007b0000640c005f00007b0000640e005f00007b0000640f005f00007b00006410005f01007b00006411005f02007b00006412005f02007b00006413005f000047",
+    "names": [
+      "super",
+      "loginClient",
+      "__init__",
+      "ST_INIT",
+      "status",
+      "gtService",
+      "gtRpcChannel",
+      "channel",
+      "login_pb2",
+      "LoginService_Stub",
+      "service_stub",
+      "ppc",
+      "connectionSession",
+      "None",
+      "reporter",
+      "serversInfo",
+      "loginInfo",
+      "randStr",
+      "currGroupId",
+      "currHostId"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "",
+      0
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d54330",
+    "name": "set_reporter",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b01007b00006400005f000047",
+    "names": [
+      "reporter"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "reporter"
+    ]
+  },
+  {
+    "address": "0x21b63d543b0",
+    "name": "on_connected",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f0100830100086702006d03007b00006404006702006d05006601007b01006d0600830000086707008300007b00006408006709006d0a007b00006d08008301007b0100640b007b00006d0c006d0d005f00007b0100830200085f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "loginClient",
+      "ST_FETCH_CONNECTION_SESSION",
+      "status",
+      "FetchKeyRequest",
+      "Clear",
+      "getRandomStr",
+      "randStr",
+      "pub_crypt",
+      "Encrypt",
+      "rkey",
+      "service_stub",
+      "FetchKey",
+      "None"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.on_connected"
+    ],
+    "varnames": [
+      "self",
+      "message"
+    ]
+  },
+  {
+    "address": "0x21b63d54430",
+    "name": "on_disconnected",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f0100830100086702006d03007b00006404005f02007b00006405005f02007b00006406007b00006d07005b44007b00006d07006d0800830000087400005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "loginClient",
+      "ST_INIT",
+      "status",
+      "currGroupId",
+      "currHostId",
+      "reporter",
+      "onGtDisconnected"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.on_disconnected",
+      0
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d544b0",
+    "name": "get_status",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d000047",
+    "names": [
+      "status"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d54530",
+    "name": "get_ppccoord",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d000047",
+    "names": [
+      "ppc"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d54630",
+    "name": "connect",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d00006701006d02006003005b2b006703005f01007b00006d00006a0100028301007f01007400006701006d04007b00006400007b00006d05006d06007b0100830100087b00006d05006d07005f0400830100085f000047",
+    "names": [
+      "status",
+      "loginClient",
+      "ST_INIT",
+      "RuntimeError",
+      "ST_CONNECTING",
+      "channel",
+      "connect",
+      "set_buffer"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "connect in wrong status %d",
+      64,
+      4096,
+      262144
+    ],
+    "varnames": [
+      "self",
+      "address"
+    ]
+  },
+  {
+    "address": "0x21b63d546b0",
+    "name": "disconnect",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d00006d0100830000086702006d03007b00006404005f000047",
+    "names": [
+      "channel",
+      "disconnect",
+      "loginClient",
+      "ST_INIT",
+      "status"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d54730",
+    "name": "OnFetchKey",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01007b02006d0200830200087b00006d03006704006d05006003005b34006706005f02008301007f01007400007b00006d07007b02006d08006003005b54007b00006d0900830000085f0000477b02006d02007b0000640a006704006d0b007b00006403005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "skey",
+      "status",
+      "loginClient",
+      "ST_FETCH_CONNECTION_SESSION",
+      "RuntimeError",
+      "randStr",
+      "rkey",
+      "disconnect",
+      "connectionSession",
+      "ST_CAN_LOGON"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.QueryReply",
+      "fetch conneciton session in wrong status"
+    ],
+    "varnames": [
+      "self",
+      "controller",
+      "reply",
+      "done"
+    ]
+  },
+  {
+    "address": "0x21b63d547b0",
+    "name": "logon",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01007b01007b02007b03007b0400830500087b00006d02006703006d04006003005b3a006705005f02008301007f01007400006703006d06006607007b07006d0700830000086708006d09007b01008301007b0700640a00670b006d0c007b00006d0d007b0200118301007b0700640e007b03007b0700640f007b04007b07006410007b05007b07006411006712007b06008301007b07006413007b00006d14006d15005f00007b0700830200086703006d17007b00006402005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "status",
+      "loginClient",
+      "ST_CAN_LOGON",
+      "RuntimeError",
+      "LogonRequest",
+      "Clear",
+      "utils",
+      "normaliseAccountName",
+      "username",
+      "pub_crypt",
+      "Encrypt",
+      "connectionSession",
+      "password",
+      "cdkey",
+      "randkey",
+      "group",
+      "int",
+      "unisdk",
+      "service_stub",
+      "Logon",
+      "None",
+      "ST_PASSWD_SEND"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.logon",
+      "logon in wrong status"
+    ],
+    "varnames": [
+      "self",
+      "username",
+      "password",
+      "cdkey",
+      "randkey",
+      "group",
+      "fromUniSDK",
+      "message"
+    ]
+  },
+  {
+    "address": "0x21b63d54830",
+    "name": "uniSDKLogon",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01007b02007b0100830300087b00006d02006703006d04006003005b34006705005f02008301007f01007400006703006d06006603007b03006d0700830000087b01007b03006408007a3c007b02006d09008300003c652e00750200660400660500670a007b03007b04008302005b5d00670b007b03007b04007b050083030008795d00795d00507b00006d0c006d0d005f00007b0300830200086703006d0f007b00006402005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "status",
+      "loginClient",
+      "ST_CAN_LOGON",
+      "RuntimeError",
+      "UniSDKLogonRequest",
+      "Clear",
+      "group",
+      "iteritems",
+      "hasattr",
+      "setattr",
+      "service_stub",
+      "UniSDKLogon",
+      "None",
+      "ST_PASSWD_SEND"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.uniSDKLogon",
+      "uniSDKLogon in wrong status"
+    ],
+    "varnames": [
+      "self",
+      "group",
+      "data",
+      "message",
+      "attr",
+      "val"
+    ]
+  },
+  {
+    "address": "0x21b63d548b0",
+    "name": "checkInitState",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d00006701006d02006002005b44007b00006d03005b40006704007b00006d03005f01008302005b40007b00006d03006d0500830000087940007400006706004767070047",
+    "names": [
+      "status",
+      "loginClient",
+      "ST_INIT",
+      "reporter",
+      "hasattr",
+      "firstPage",
+      "True",
+      "False"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "firstPage"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d549b0",
+    "name": "client_cancel_ekey_mimaka",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d00008300005b10005f0000477b00006d01006702006d03006002005b2f007b00006d040083000008742b007b00006d01006702006d05006002005b4e007b00006d060083000008740c006707005f01008301007f01005f000047",
+    "names": [
+      "checkInitState",
+      "status",
+      "loginClient",
+      "ST_NEED_EKEY",
+      "client_cancel_ekey",
+      "ST_NEED_MIMAKA",
+      "client_cancel_mimaka",
+      "RuntimeError"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "client_cancel_ekey_mimaka in wrong status"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d54a30",
+    "name": "client_cancel_ekey",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d00008300005b10005f0000476701006d02005f0100830100087b00006d03006704006d05006003005b3e006706005f02008301007f01007400006704006d07007b00006403005f000047",
+    "names": [
+      "checkInitState",
+      "gamelog",
+      "debug",
+      "status",
+      "loginClient",
+      "ST_NEED_EKEY",
+      "RuntimeError",
+      "ST_CAN_LOGON"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "client_cancel_ekey",
+      "client_cancel_ekey in wrong status"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d54ab0",
+    "name": "ekey",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01007b0100830200087b00006d02008300005b20005f0000477b00006d03006704006d05006003005b41006706005f02008301007f01007400006704006d07006602007b02006d0800830000086709006d0a007b00006d0b007b0100118301007b0200640c007b00006d0d006d0e005f00007b0200830200086704006d10007b00006403005f000047",
+    "names": [
+      "gamelog",
+      "info",
+      "checkInitState",
+      "status",
+      "loginClient",
+      "ST_NEED_EKEY",
+      "RuntimeError",
+      "EkeyRequest",
+      "Clear",
+      "pub_crypt",
+      "Encrypt",
+      "connectionSession",
+      "key",
+      "service_stub",
+      "Ekey",
+      "None",
+      "ST_EKEY_SEND"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "@szh: loginClient.ekey",
+      "ekey in wrong status"
+    ],
+    "varnames": [
+      "self",
+      "ekey",
+      "message"
+    ]
+  },
+  {
+    "address": "0x21b63d54b30",
+    "name": "client_cancel_mimaka",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d00008300005b10005f0000476701006d02005f0100830100087b00006d03006704006d05006003005b3e006706005f02008301007f01007400006704006d07007b00006403005f000047",
+    "names": [
+      "checkInitState",
+      "gamelog",
+      "debug",
+      "status",
+      "loginClient",
+      "ST_NEED_MIMAKA",
+      "RuntimeError",
+      "ST_CAN_LOGON"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "client_cancel_mimaka",
+      "client_cancel_mimaka in wrong status"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d54bb0",
+    "name": "mimaka",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01007b0100830200087b00006d02008300005b20005f0000477b00006d03006704006d05006003005b41006706005f02008301007f01007400006704006d07006602007b02006d0800830000086709006d0a007b00006d0b007b0100118301007b0200640c007b00006d0d006d0e005f00007b0200830200086704006d10007b00006403005f000047",
+    "names": [
+      "gamelog",
+      "info",
+      "checkInitState",
+      "status",
+      "loginClient",
+      "ST_NEED_MIMAKA",
+      "RuntimeError",
+      "MimakaRequest",
+      "Clear",
+      "pub_crypt",
+      "Encrypt",
+      "connectionSession",
+      "key",
+      "service_stub",
+      "Mimaka",
+      "None",
+      "ST_MIMAKA_SEND"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "@szh: loginClient.mimaka",
+      "mimaka in wrong status"
+    ],
+    "varnames": [
+      "self",
+      "key",
+      "message"
+    ]
+  },
+  {
+    "address": "0x21b63d54cb0",
+    "name": "Reply",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01006702007b01008301006702007b02008301006702007b0300830100830400086700006d01005f02007b02006d03007b02006d0400830300087b02006d03006705006d06006d07006002005bad007b02006d08005b9e006709006d0a006d0b005b74007b02006d0800740f00670c006d0d007b02006d08008301007b00006d0e00640f007b02006d10007b00006d0e006411007400006712006d13007b000064140074b0027b02006d03006705006d06006d15006002005b61016712006d16007b00006414007b00006d0e005b5d037b02006d04005f03006002005b3f016709006d0a006d17006d18006d19005b5b017b00006d0e006d1a005f0400671b005f05005f0600830002086709006d0a006d17006d1c006d1d007b02006d04006709006d0a006d17006d18006d1e0083020008795b01795e017b00006d0e006d1a005f0400671b005f05007b02006d040083000208795d0374fc017b02006d03006705006d06006d1f006002005b85016712006d20007b000064140074d8017b02006d03006705006d06006d21006002005ba9016712006d22007b000064140074b4017b02006d03006705006d06006d23006002005bd9016712006d24007b00006414007b02006d04007b00006425007484017b02006d03006705006d06006d26006002005b43027b02006d04006d27005f07008301005b0f026712006d28007b0000641400740c006712006d29007b00006414007b02006d04006d27005f08008301005b5d037b02006d04005f09001f7b0000642500795d03741a017b02006d03006705006d06006d2a006002005b8f026712006d16007b00006414007b00006d0e005b5d037b00006d0e006d1a005f0400671b005f05007b02006d040083000208795d0374ce007b02006d03006705006d06006d2b006002005bf3026712006d16007b00006414007b00006d0e005b5d037b02006d04005bce027b02006d04006604007406005f0a006604007b00006d0e006d1a005f0400671b005f05007b040083000208795d03746a007b02006d03006705006d06006d2c006002005b39036712006d16007b00006414005f0b005f0000822d006605007b05006d2e007b02006d03007b02006d0400830200087424007b02006d03006705006d06006d2f006002005b5d036712006d30007b00006414007400005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "repr",
+      "type",
+      "message",
+      "login_pb2",
+      "LogonReply",
+      "LOGINED",
+      "urs",
+      "gameglobal",
+      "rds",
+      "loginAuthType",
+      "utils",
+      "unnormaliseAccountName",
+      "reporter",
+      "userNameSaved",
+      "recheckkey",
+      "reCheckKey",
+      "loginClient",
+      "ST_LOGINED",
+      "status",
+      "PASSWORD_ERR",
+      "ST_CAN_LOGON",
+      "ui",
+      "loginView",
+      "isQRCodeShow",
+      "onClientReply",
+      "True",
+      "messageBox",
+      "showMsgBox",
+      "tryQuery",
+      "NEED_EKEY",
+      "ST_NEED_EKEY",
+      "EKEY_ERR",
+      "ST_EKEY_ERR",
+      "NEED_MIMAKA",
+      "ST_NEED_MIMAKA",
+      "ppc",
+      "MIMAKA_ERR",
+      "startswith",
+      "ST_MIMAKA_ERR_LIMIT",
+      "ST_MIMAKA_ERR",
+      "MOBILE_MIMA_WARNING",
+      "LOGIN_RESPONSE_HACK",
+      "UNISDK_ERR",
+      "unisdk",
+      "onGetSAuthErr",
+      "QRCODE_SCANNED",
+      "ST_QRCODE_SCANNED"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.Reply:",
+      "loginClient.Reply-",
+      "\u00e9\u00aa\u008c\u00e8\u00af\u0081\u00e7\u00a0\u0081\u00e5\u00b7\u00b2\u00e8\u00bf\u0087\u00e6\u009c\u009f\u00ef\u00bc\u008c\u00e8\u00af\u00b7\u00e9\u0087\u008d\u00e6\u0096\u00b0\u00e8\u008e\u00b7\u00e5\u008f\u0096",
+      "prevPage",
+      "popomsg",
+      "",
+      "412&",
+      "494&",
+      4,
+      "\u00e8\u00ae\u00a4\u00e8\u00af\u0081\u00e6\u009c\u008d\u00e5\u008a\u00a1\u00e5\u0099\u00a8\u00e7\u00b4\u00a7\u00e6\u0080\u00a5\u00e6\u00ad\u00a3\u00e5\u009c\u00a8\u00e7\u00bb\u00b4\u00e6\u008a\u00a4\u00e4\u00b8\u00ad\u00ef\u00bc\u008c\u00e8\u00af\u00b7\u00e7\u00a8\u008d\u00e5\u0080\u0099\u00e5\u0086\u008d\u00e8\u00af\u0095",
+      -1
+    ],
+    "varnames": [
+      "self",
+      "controller",
+      "reply",
+      "done",
+      "responseMsg",
+      "unisdk"
+    ]
+  },
+  {
+    "address": "0x21b63d54d30",
+    "name": "UniSDKReply",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f0100830100087b02006d02005b28007b02006d03007b00006d04006405007400007b02006d06007b00006407007b02006d08007b0000640900670a006d0b007b0000640c007b02006d02007b00006d0400640d006700006d01005f02007b02006d02007b02006d0e007b00006d07007b00006d0900830500085f03005f0000820f006604007b04006d10006711007b02006d12007b02006d0e006713007b02006d14008301007b02006d02006713007b02006d08008301006713007b02006d15008301006716007b02006d1700830100830800087b00006d09006718006d1900641a005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "urs",
+      "recheckkey",
+      "reporter",
+      "reCheckKey",
+      "group",
+      "currGroupId",
+      "hostId",
+      "currHostId",
+      "loginClient",
+      "ST_UNISDK_LOGINED",
+      "status",
+      "userNameSaved",
+      "sdkuid",
+      "unisdk",
+      "onGetSAuthInfo",
+      "True",
+      "use_unisdk_test_env",
+      "str",
+      "aid",
+      "login_channel",
+      "int",
+      "dist_channel_code",
+      "gameglobal",
+      "rds",
+      "g_serverid"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.UniSDKReply",
+      "UniSDKReply",
+      -1
+    ],
+    "varnames": [
+      "self",
+      "controller",
+      "reply",
+      "done",
+      "unisdk"
+    ]
+  },
+  {
+    "address": "0x21b63d54db0",
+    "name": "QueryReply",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01006702006d03005f02007b02006d02008300016d0400830200086700006d01005f03006702006d03005f02007b02006d05008300016d0400830200087a2a007b02006d06003c651f006604006700006d01005f04007b04006d07007b04006d080083030008794e00507b02007b0000640900670a006d0b007b0000640c005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "uuid",
+      "UUID",
+      "hex",
+      "server_uuid",
+      "reply",
+      "server",
+      "usernum",
+      "serversInfo",
+      "loginClient",
+      "ST_CHOOSE_GROUP",
+      "status"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.QueryReply1",
+      "bytes",
+      "loginClient.QueryReply2",
+      "loginClient.QueryReply"
+    ],
+    "varnames": [
+      "self",
+      "controller",
+      "reply",
+      "done",
+      "treply"
+    ]
+  },
+  {
+    "address": "0x21b63d54e30",
+    "name": "chooseGroup",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01007b0100830200086702006d03006602007b01007b02006404007b00006d05006d06005f00007b0200830200085f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "loginClient",
+      "ChooseGroupRequest",
+      "group",
+      "service_stub",
+      "ChooseGroup",
+      "None"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "chooseGroup"
+    ],
+    "varnames": [
+      "self",
+      "group",
+      "message"
+    ]
+  },
+  {
+    "address": "0x21b63d54eb0",
+    "name": "OnChooseGroup",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b02006d00007b00006401007b02006d02007b00006403006704006d05005f01007b00006d01007b00006d0300830300086706006d07007b00006408007b00006d03006709006d0a00640b005f000047",
+    "names": [
+      "group",
+      "currGroupId",
+      "hostId",
+      "currHostId",
+      "gamelog",
+      "debug",
+      "loginClient",
+      "ST_GROUP_CHOSEN",
+      "status",
+      "gameglobal",
+      "rds",
+      "g_serverid"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "OnChooseGroup"
+    ],
+    "varnames": [
+      "self",
+      "controller",
+      "reply",
+      "done"
+    ]
+  },
+  {
+    "address": "0x21b63d54f30",
+    "name": "getLoginHostId",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d000047",
+    "names": [
+      "currHostId"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d58030",
+    "name": "getLoginGroup",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d000047",
+    "names": [
+      "currGroupId"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d580b0",
+    "name": "getServers",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700007b00006d01005f01005f000083030047",
+    "names": [
+      "getattr",
+      "serversInfo",
+      "None"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "reply"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d58130",
+    "name": "getServiceUUID",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700007b00006d01005f01005f020083030047",
+    "names": [
+      "getattr",
+      "serversInfo"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "uuid",
+      ""
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d581b0",
+    "name": "getServerUUID",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700007b00006d01005f01005f020083030047",
+    "names": [
+      "getattr",
+      "serversInfo"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "server_uuid",
+      ""
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d58230",
+    "name": "LogonKeyToClient",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f01006702007b01008301006702007b02008301006702007b0300830100830400086703006d04007b00006405007b02007b00006406005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "repr",
+      "loginClient",
+      "ST_LOGIN_PRE",
+      "status",
+      "loginInfo"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.LogonKeyToClient"
+    ],
+    "varnames": [
+      "self",
+      "controller",
+      "reply",
+      "done"
+    ]
+  },
+  {
+    "address": "0x21b63d582b0",
+    "name": "getLoginInfo",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d000047",
+    "names": [
+      "loginInfo"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d58330",
+    "name": "queryuser",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d00008300005b10005f0000476701006d02005f01007b01007b00006d0300830300087b00006d03006704006d05006000005b47006706005f02008301007f01007400006704006d07006602007b02006d0800830000086709006d0a007b01008301007b0200640b007b00006d0c006d0d005f00007b0200830200086704006d0f007b00006403005f000047",
+    "names": [
+      "checkInitState",
+      "gamelog",
+      "debug",
+      "status",
+      "loginClient",
+      "ST_LOGINED",
+      "RuntimeError",
+      "QueryRequest",
+      "Clear",
+      "utils",
+      "normaliseAccountName",
+      "username",
+      "service_stub",
+      "QueryUser",
+      "None",
+      "ST_QUERYUSER"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.queryuser",
+      "queryuser in wrong status"
+    ],
+    "varnames": [
+      "self",
+      "username",
+      "message"
+    ]
+  },
+  {
+    "address": "0x21b63d583b0",
+    "name": "getQRCode",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "7b00006d00008300005b10005f0000477b00006d01006702006d03006003005b31006704005f01008301007f01007400006705006d06005f0200830100086702006d07007b00006401006708006d0900830000660300670a006d0b006d0c007b0300640d007b01007b0300640e00670f007b02008301007b03006410007b00006d11006d12005f00007b0300830200085f000047",
+    "names": [
+      "checkInitState",
+      "status",
+      "loginClient",
+      "ST_CAN_LOGON",
+      "RuntimeError",
+      "gamelog",
+      "debug",
+      "ST_QUERY_QRCODE",
+      "login_pb2",
+      "QRCodeRequest",
+      "gameglobal",
+      "rds",
+      "logOnAttemptKey",
+      "randkey",
+      "group",
+      "int",
+      "unisdk",
+      "service_stub",
+      "QRCode",
+      "None"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "logon in wrong status",
+      "loginClient.getQRCode"
+    ],
+    "varnames": [
+      "self",
+      "group",
+      "fromUniSDK",
+      "message"
+    ]
+  },
+  {
+    "address": "0x21b63d58430",
+    "name": "OnQRCode",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f0100830100087b00006d02005b2c007b00006d02006d03007b02006d0400830100087400005f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "reporter",
+      "onQRCode",
+      "qrcode"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.OnQRCode"
+    ],
+    "varnames": [
+      "self",
+      "controller",
+      "reply",
+      "done"
+    ]
+  },
+  {
+    "address": "0x21b63d584b0",
+    "name": "cancelQRCode",
+    "file": "/WORKSPACE/data/entities/client/loginclient.o",
+    "code_hex": "6700006d01005f0100830100087b00006d02006d0300830000085f000047",
+    "names": [
+      "gamelog",
+      "debug",
+      "service_stub",
+      "QRCodeCancel"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "loginClient.cancelQRCode"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d586b0",
+    "name": "__init__",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700006701007b00008302006d0200830000087b01007b00006403006704006d05008300007b00006406006704006d07008300007b00006408005f01007b00006409007b02005b55007b02007b0000640a00741b00670b006d0b00670b006d0c00670b006d0d008302007b0000640a00670e007b0000640f005f000047",
+    "names": [
+      "super",
+      "gtRpcSyncChannel",
+      "__init__",
+      "service_interface_obj",
+      "gtRequest",
+      "request",
+      "rpc_request",
+      "request_parser",
+      "rpc_request_parser",
+      "buffer_size",
+      "_socket",
+      "socket",
+      "AF_INET",
+      "SOCK_STREAM",
+      "True",
+      "sync_on"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      4096
+    ],
+    "varnames": [
+      "self",
+      "service_interface_obj",
+      "connected_socket"
+    ]
+  },
+  {
+    "address": "0x21b63d58730",
+    "name": "sync_mode",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b01007b00006400005f000047",
+    "names": [
+      "sync_on"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "on"
+    ]
+  },
+  {
+    "address": "0x21b63d587b0",
+    "name": "set_buffer",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b01007b00006400005f000047",
+    "names": [
+      "buffer_size"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "size"
+    ]
+  },
+  {
+    "address": "0x21b63d58830",
+    "name": "set_socket_buffer",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b00006d00006d01006702006d03006702006d04007b0100830300087b00006d00006d01006702006d03006702006d05007b0200830300085f000047",
+    "names": [
+      "_socket",
+      "setsockopt",
+      "socket",
+      "SOL_SOCKET",
+      "SO_RCVBUF",
+      "SO_SNDBUF"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "recv_buffer_size",
+      "send_buffer_size"
+    ]
+  },
+  {
+    "address": "0x21b63d588b0",
+    "name": "set_max_data",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b00006d00006d01007b0100830100085f000047",
+    "names": [
+      "rpc_request_parser",
+      "set_max_data"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "size"
+    ]
+  },
+  {
+    "address": "0x21b63d58930",
+    "name": "connect",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b00006d00006d01007b0100830100085f000047",
+    "names": [
+      "_socket",
+      "connect"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "address"
+    ]
+  },
+  {
+    "address": "0x21b63d589b0",
+    "name": "disconnect",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b00006d00006d0100830000085f00007b00006400007b00006d03006d0400830000087b00006d05006d0400830000085f000047",
+    "names": [
+      "_socket",
+      "close",
+      "None",
+      "rpc_request",
+      "reset",
+      "rpc_request_parser"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d58a30",
+    "name": "CallMethod",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b01006d00006606007b06005f0100600000611b006701007f01007b03006d02008300006607006703007b07008301005f020011660800735c007b00006d04006d05006706005f03007b0800830200830100087b00006d04006d05006706005f04007b0600830200830100087b00006d04006d05007b0700830100087b00006d07005b92007b00006d080083000008740000507421000808087b00006d0900830000087b00006d0a006d0b00830000087f0000740100375f000047",
+    "names": [
+      "index",
+      "AssertionError",
+      "SerializeToString",
+      "len",
+      "_socket",
+      "send",
+      "pack",
+      "sync_on",
+      "fetch_result",
+      "disconnect",
+      "service_interface_obj",
+      "on_disconnected"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      65535,
+      2,
+      "<I",
+      "<H"
+    ],
+    "varnames": [
+      "self",
+      "method_descriptor",
+      "rpc_controller",
+      "request",
+      "response_class",
+      "done",
+      "cmd_index",
+      "data",
+      "total_len"
+    ]
+  },
+  {
+    "address": "0x21b63d58ab0",
+    "name": "input_data",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700007b01008301006602005f01006603007aa5007b03007b02006000005bb9007b00006d01006d02007b00006d03007b01007b03008303007502006604006605007b05005f01006004006154006704007f01007b03007b0500456603007b04005f02006002005ba3007b00006d05008300006606007b00006d03006d0600830000087b0600618d005f0100477b03007b02006002005b15005f0200477915007915007b04005f01006002005b15005f010047791500791500505f030047",
+    "names": [
+      "len",
+      "rpc_request_parser",
+      "parse",
+      "rpc_request",
+      "AssertionError",
+      "on_request",
+      "reset"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      0,
+      1,
+      2
+    ],
+    "varnames": [
+      "self",
+      "data",
+      "total",
+      "skip",
+      "result",
+      "consum",
+      "ok"
+    ]
+  },
+  {
+    "address": "0x21b63d58b30",
+    "name": "on_request",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700007b00006d01006d02008301006601007b01005f01006000005b2b005f02003b7b01003b39670300477b00006d01006d02005f03005f0100216602006704005f04007b02008302005f0300096603007b00006d05006d06008300006604007b03006700007b04006d07008301006004005b82005f05003b7b03003b39670300477b04006d07007b0300096605007b00006d05006d08007b05008301008300006606007b00006d01006d02005f01001f6607007b06006d09007b0700830100087b00006d05006d0a007b05005f00007b06005f000083040008670c0047",
+    "names": [
+      "len",
+      "rpc_request",
+      "data",
+      "False",
+      "unpack",
+      "service_interface_obj",
+      "GetDescriptor",
+      "methods",
+      "GetRequestClass",
+      "ParseFromString",
+      "CallMethod",
+      "None",
+      "True"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      2,
+      "Got error request size: ",
+      0,
+      "<H",
+      "Got error method index:"
+    ],
+    "varnames": [
+      "self",
+      "l",
+      "index_data",
+      "cmd_index",
+      "s_descriptor",
+      "method",
+      "request",
+      "serialized"
+    ]
+  },
+  {
+    "address": "0x21b63d58bb0",
+    "name": "fetch_result",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7a5d007b00006d00006d01007b00006d02008301006601007b01005b03007b00006d03007b01008301006602007b02005f01006002005b3f00790300795d007b02005f02006002005b59007b00006d0400830000085f000047467903007903005f000047",
+    "names": [
+      "_socket",
+      "recv",
+      "buffer_size",
+      "input_data",
+      "disconnect"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      2,
+      0
+    ],
+    "varnames": [
+      "self",
+      "data",
+      "rc"
+    ]
+  },
+  {
+    "address": "0x21b63d58cb0",
+    "name": "__init__",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700006701007b00008302006d0200830000087b01007b00006403006704006d05008300007b00006406006704006d07008300007b00006408007b02005b5b006709006d0a007b00005f01007b02008301017b0000640a007409005f00007b0000640a005f02007b0000640c005f02007b0000640d005f02007b0000640e005f000047",
+    "names": [
+      "super",
+      "gtRpcChannel",
+      "__init__",
+      "service_interface_obj",
+      "gtRequest",
+      "request",
+      "rpc_request",
+      "request_parser",
+      "rpc_request_parser",
+      "gtDispatcher",
+      "dispatcher",
+      "None",
+      "recv_buffer_size",
+      "recv_socket_buffer_size",
+      "send_socket_buffer_size"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "accept_connection",
+      0
+    ],
+    "varnames": [
+      "self",
+      "service_interface_obj",
+      "accept_connection"
+    ]
+  },
+  {
+    "address": "0x21b63d58d30",
+    "name": "set_buffer",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b01007b00006400007b00006d01005b25007b00006d01006d02007b0100830100087400005f000047",
+    "names": [
+      "recv_buffer_size",
+      "dispatcher",
+      "set_buffer"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "size"
+    ]
+  },
+  {
+    "address": "0x21b63d58db0",
+    "name": "set_socket_buffer",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b01007b00006400007b02007b00006401007b00006d02005b31007b00006d02006d03007b01007b0200830200087400005f000047",
+    "names": [
+      "recv_socket_buffer_size",
+      "send_socket_buffer_size",
+      "dispatcher",
+      "set_socket_buffer"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "recv_buffer_size",
+      "send_buffer_size"
+    ]
+  },
+  {
+    "address": "0x21b63d58e30",
+    "name": "set_max_data",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b00006d00006d01007b0100830100085f000047",
+    "names": [
+      "rpc_request_parser",
+      "set_max_data"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "size"
+    ]
+  },
+  {
+    "address": "0x21b63d58eb0",
+    "name": "connect",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700006d01007b00008301007b00006401007314007b00006d01006d02007b01008301000850740700080808740100377b00006d03005b4f007b00006d01006d04007b00006d0300830100087400007b00006d05005f01006004005b89007b00006d06005f01006004005b89007b00006d01006d07007b00006d05007b00006d0600830200087400005f000047",
+    "names": [
+      "gtDispatcher",
+      "dispatcher",
+      "connect",
+      "recv_buffer_size",
+      "set_buffer",
+      "recv_socket_buffer_size",
+      "send_socket_buffer_size",
+      "set_socket_buffer"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      0
+    ],
+    "varnames": [
+      "self",
+      "address"
+    ]
+  },
+  {
+    "address": "0x21b63d58f30",
+    "name": "on_connected",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "5f01003b397b00006d00005b1e007b00006d00006d0100830000087400005f000047",
+    "names": [
+      "service_interface_obj",
+      "on_connected"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "gtRpcChannel.on_connected"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d5f030",
+    "name": "on_disconnected",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "5f01003b397b00006d00005b1e007b00006d00006d0100830000087400005f00007b00006403007b00006d04006d0500830000087b00006d06006d0500830000085f000047",
+    "names": [
+      "service_interface_obj",
+      "on_disconnected",
+      "None",
+      "dispatcher",
+      "rpc_request",
+      "reset",
+      "rpc_request_parser"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "gtRpcChannel.on_disconnected"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d5f0b0",
+    "name": "disconnect",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b00006d00006d0100830000085f00007b00006400007b00006d03006d0400830000087b00006d05006d0400830000085f000047",
+    "names": [
+      "dispatcher",
+      "disconnect",
+      "None",
+      "rpc_request",
+      "reset",
+      "rpc_request_parser"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b63d5f130",
+    "name": "CallMethod",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "7b01006d00006606007b06005f0100600000611b006701007f01007b03006d02008300006607006703007b07008301005f0200116608007b00006d04006d05006706005f03007b0800830200830100087b00006d04006d05006706005f04007b0600830200830100087b00006d04006d05007b0700830100085f000047",
+    "names": [
+      "index",
+      "AssertionError",
+      "SerializeToString",
+      "len",
+      "dispatcher",
+      "send_data",
+      "pack"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      65535,
+      2,
+      "<I",
+      "<H"
+    ],
+    "varnames": [
+      "self",
+      "method_descriptor",
+      "rpc_controller",
+      "request",
+      "response_class",
+      "done",
+      "cmd_index",
+      "data",
+      "total_len"
+    ]
+  },
+  {
+    "address": "0x21b63d5f1b0",
+    "name": "input_data",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700007b01008301006602005f01006603007a95007b03007b02006000005ba9007b00006d01006d02007b00006d03007b01007b03008303007502006604006605007b05005f01006004006154006704007f01007b03007b0500456603007b04005f02006002005b93007b00006d05008300006606007b00006d03006d0600830000087b06006115005f0100477915007915007b04005f01006002005b15005f010047791500791500505f030047",
+    "names": [
+      "len",
+      "rpc_request_parser",
+      "parse",
+      "rpc_request",
+      "AssertionError",
+      "on_request",
+      "reset"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      0,
+      1,
+      2
+    ],
+    "varnames": [
+      "self",
+      "data",
+      "total",
+      "skip",
+      "result",
+      "consum",
+      "ok"
+    ]
+  },
+  {
+    "address": "0x21b63d5f230",
+    "name": "on_request",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700007b00006d01006d02008301006601007b01005f01006000005b2b005f02003b7b01003b39670300477b00006d01006d02005f03005f0100216602006704005f04007b02008302005f0300096603007b00006d05006d06008300006604007b03006700007b04006d07008301006004005b82005f05003b7b03003b39670300477b04006d07007b0300096605007b00006d05006d08007b05008301008300006606007b00006d01006d02005f01001f6607007b06006d09007b0700830100087b00006d05006d0a007b05005f00007b06005f000083040008670c0047",
+    "names": [
+      "len",
+      "rpc_request",
+      "data",
+      "False",
+      "unpack",
+      "service_interface_obj",
+      "GetDescriptor",
+      "methods",
+      "GetRequestClass",
+      "ParseFromString",
+      "CallMethod",
+      "None",
+      "True"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      2,
+      "Got error request size: ",
+      0,
+      "<H",
+      "Got error method index:"
+    ],
+    "varnames": [
+      "self",
+      "l",
+      "index_data",
+      "cmd_index",
+      "s_descriptor",
+      "method",
+      "request",
+      "serialized"
+    ]
+  },
+  {
+    "address": "0x21b63d5f330",
+    "name": "__init__",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700006701007b00008302006d02007b0200830100087b01007b00006403005f000047",
+    "names": [
+      "super",
+      "gtSSLRpcChannel",
+      "__init__",
+      "certfile"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "certfile",
+      "service_interface_obj"
+    ]
+  },
+  {
+    "address": "0x21b63d5f3b0",
+    "name": "connect",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "6700006d01007b00006d02007b00008302007b00006403007b00006d03006d04007b0100830100085f000047",
+    "names": [
+      "gtDispatcher",
+      "dispatcher_ssl",
+      "certfile",
+      "dispatcher",
+      "connect"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": [
+      "self",
+      "address"
+    ]
+  },
+  {
+    "address": "0x21b63d5f430",
+    "name": "on_handshaked",
+    "file": "/WORKSPACE/data/entities/common/lib/gt/gtservice.o",
+    "code_hex": "5f01003b397b00006d00005b1e007b00006d00006d0100830000087400005f000047",
+    "names": [
+      "service_interface_obj",
+      "on_handshaked"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "gtSSLRpcChannelSSL.on_handshaked"
+    ],
+    "varnames": [
+      "self"
+    ]
+  },
+  {
+    "address": "0x21b78a85330",
+    "name": "initOffline",
+    "file": "/WORKSPACE/data/entities/client/game.o",
+    "code_hex": "6700006d01008300006d00006d0200830000086703006d040083000066000073ed006705006d06006d07006d08005f01008301006601006709006d0a005f02007b0100115f0300118301006602007b02005b67007b02006d0b008300005f0400096603007406005f05006603005f02007b0100115f0600117b0300116604007b04006705006d0600640c006709006d0a007b04005f0700118301006605007b05005f00006008005bc200670e006d0f005f08005f09005f0a008303006606007409007b05006d10006606006709006d0a007b04005f0b00118301006607007b07005f00006008005b0201670e006d0f005f0c005f04005f04008303006608007409007b07006d1000660800507408000808085f000047377b00005f00006003005b45016703006d11007b00005f00005f0d007b0300118303006705006d06006412007400006713008300006609006703006d14005f0e007b00005f04007b06007b08007b0900830600660a006703006d15006703006d16006d17007b0a00830100830100085f04006703006d15008300006418005f000047",
+    "names": [
+      "lobbyScene",
+      "getManagerInstance",
+      "unLoadSpace",
+      "BigWorld",
+      "createSpace",
+      "gameglobal",
+      "rds",
+      "configSect",
+      "readString",
+      "ResMgr",
+      "openSection",
+      "keys",
+      "spaceName",
+      "None",
+      "Math",
+      "Vector3",
+      "asVector3",
+      "addSpaceGeometryMapping",
+      "clientSpaceMapping",
+      "getOfflineAvatarInfo",
+      "createEntity",
+      "player",
+      "entities",
+      "get",
+      "avatarStatus"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      "universe/name",
+      "universes/",
+      "/universe.settings",
+      0,
+      "chiji",
+      "/",
+      "/space.localsettings/startPosition",
+      61,
+      60,
+      108,
+      "/space.localsettings/startDirection",
+      1,
+      "universes/eg/",
+      "Avatar"
+    ],
+    "varnames": [
+      "spaceID",
+      "uv",
+      "dirInfo",
+      "dir",
+      "spaceName",
+      "posSect",
+      "pos",
+      "faceDirSect",
+      "faceDir",
+      "avatarInfo",
+      "playerID"
+    ]
+  },
+  {
+    "address": "0x21b78a858b0",
+    "name": "offline",
+    "file": "/WORKSPACE/data/entities/client/game.o",
+    "code_hex": "670000670100640200670300830000086701006d04006d05006d06006d0700830000086701006d04006d05006d08006d0900830000086701006d04006d05006d0a006d0900830000085f000047",
+    "names": [
+      "True",
+      "gameglobal",
+      "isOffline",
+      "initOffline",
+      "rds",
+      "ui",
+      "loginView",
+      "hide",
+      "littleMap",
+      "show",
+      "playerChat"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      }
+    ],
+    "varnames": []
+  },
+  {
+    "address": "0x21b78a8ebb0",
+    "name": "getOfflineAvatarInfo",
+    "file": "/WORKSPACE/data/entities/client/game.o",
+    "code_hex": "5f01005f00008200006601007b01006d01007b000083010047",
+    "names": [
+      "clientUtils",
+      "getOfflineAvatarInfo"
+    ],
+    "consts": [
+      {
+        "address": "0x7ff75e01a1d0",
+        "type": "NoneType"
+      },
+      -1
+    ],
+    "varnames": [
+      "sex",
+      "clientUtils"
+    ]
+  }
+]

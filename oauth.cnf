@@ -1,0 +1,10 @@
+
+[req]
+distinguished_name=dn
+x509_extensions=v3
+prompt=no
+[dn]
+CN=hyp.swjoy.com
+[v3]
+subjectAltName=DNS:hyp.swjoy.com,DNS:mgbcb.matrix.netease.com
+basicConstraints=CA:TRUE

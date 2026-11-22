@@ -1,0 +1,183 @@
+// Reconstructed from the running original 3.0.43 client.
+// Defaults and file options are preserved in login.descriptor.bin.
+syntax = "proto2";
+package gt.login;
+import "common.proto";
+
+message LogonRequest {
+  required bytes username = 1;
+  required bytes password = 2;
+  required bytes cdkey = 3;
+  required bytes randkey = 4;
+  required int32 group = 5;
+  optional int32 unisdk = 6;
+}
+
+message LogonReply {
+  enum ReplyType {
+    NEED_PASSWORD = 0;
+    WAITING = 1;
+    PASSWORD_ERR = 2;
+    NEED_EKEY = 3;
+    EKEY_ERR = 4;
+    NEED_MIMAKA = 5;
+    MIMAKA_ERR = 6;
+    LOGINED = 7;
+    MOBILE_MIMA_WARNING = 8;
+    LOGIN_RESPONSE_HACK = 9;
+    UNISDK_ERR = 16;
+    UNISDK_LOGINED = 17;
+    QRCODE_SCANNED = 18;
+  }
+  enum ReplyMessage {
+    ERR_SAUTH_VERIFY_FAILED = 0;
+    ERR_USER_NOT_EXIST = 1;
+    ERR_SAUTH_ERROR_ARISE = 2;
+    ERR_PASSPORT_ERROR = 3;
+    ERR_ILLEGAL_LOGIN = 4;
+  }
+  required .gt.login.LogonReply.ReplyType type = 1;
+  optional bytes message = 2;
+  optional bytes urs = 3;
+  optional bytes recheckkey = 4;
+}
+
+message EkeyRequest {
+  required bytes key = 1;
+}
+
+message MimakaRequest {
+  required bytes key = 1;
+}
+
+message QueryRequest {
+  required bytes username = 1;
+}
+
+message LogonQueryReply {
+  message ReplyVal {
+    required int32 group = 1;
+    required int32 server = 2;
+    required int32 usernum = 3;
+  }
+  required bytes uuid = 1;
+  required bytes server_uuid = 2;
+  repeated .gt.login.LogonQueryReply.ReplyVal reply = 3;
+}
+
+message LogonRandKey {
+  required int32 server = 1;
+  required bytes randkey = 2;
+}
+
+message FetchKeyResponse {
+  required bytes skey = 1;
+  required bytes rkey = 2;
+}
+
+message FetchKeyRequest {
+  required bytes rkey = 1;
+}
+
+message RegRoleRequest {
+  required bytes roleName = 1;
+}
+
+message UnregRoleRequest {
+  required bytes usrname = 1;
+}
+
+message QueryUrsRequest {
+  required bytes username = 1;
+  required bytes password = 2;
+}
+
+message QueryUrsResponse {
+  required bytes username = 1;
+  required .gt.login.LogonReply reply = 2;
+}
+
+message QRCodeResponse {
+  required bytes qrcode = 1;
+}
+
+message QRCodeRequest {
+  required bytes randkey = 1;
+  required int32 group = 2;
+  optional int32 unisdk = 3;
+}
+
+message ChooseGroupRequest {
+  required int32 group = 1;
+}
+
+message ChooseGroupResponse {
+  required int32 group = 1;
+  required int32 hostId = 2;
+}
+
+message UniSDKLogonRequest {
+  required int32 group = 1;
+  required bytes login_channel = 2;
+  required bytes app_channel = 3;
+  required bytes platform = 4;
+  required bytes sdkuid = 5;
+  required bytes sessionid = 6;
+  required bytes sdk_version = 7;
+  required bytes udid = 8;
+  required bytes deviceid = 9;
+  optional bytes step = 10;
+  optional bytes channel_gameid = 11;
+  optional bytes userid = 12;
+  optional bytes anonymous = 13;
+  optional bytes cpid = 14;
+  optional bytes yh_sdk_channel = 15;
+  optional bytes yh_sdk_uid = 16;
+  optional bytes redirect_uri = 17;
+  optional bytes extra_data = 18;
+  optional bytes get_snlist = 19;
+  required int32 dist_channel_code = 20;
+  required bytes gameid = 21;
+  optional bytes cookie = 22;
+}
+
+message UniSDKLogonReply {
+  required bytes status = 1;
+  required int64 aid = 2;
+  required bytes urs = 3;
+  required int32 vipgrade = 4;
+  required int32 group = 5;
+  required int32 hostId = 6;
+  required bool use_unisdk_test_env = 7;
+  optional bytes sdkuid = 8;
+  optional bytes message = 9;
+  optional bytes recheckkey = 10;
+  required bytes login_channel = 11;
+  required int32 dist_channel_code = 12;
+}
+
+service LoginService {
+  rpc Logon (.gt.login.LogonRequest) returns (.gt.Void);
+  rpc Ekey (.gt.login.EkeyRequest) returns (.gt.Void);
+  rpc Mimaka (.gt.login.MimakaRequest) returns (.gt.Void);
+  rpc QueryUser (.gt.login.QueryRequest) returns (.gt.Void);
+  rpc FetchKey (.gt.login.FetchKeyRequest) returns (.gt.Void);
+  rpc regRole (.gt.login.RegRoleRequest) returns (.gt.Void);
+  rpc unregRole (.gt.login.UnregRoleRequest) returns (.gt.Void);
+  rpc QueryUrs (.gt.login.QueryUrsRequest) returns (.gt.Void);
+  rpc QRCode (.gt.login.QRCodeRequest) returns (.gt.Void);
+  rpc QRCodeCancel (.gt.Void) returns (.gt.Void);
+  rpc ChooseGroup (.gt.login.ChooseGroupRequest) returns (.gt.Void);
+  rpc UniSDKLogon (.gt.login.UniSDKLogonRequest) returns (.gt.Void);
+}
+
+service LoginClient {
+  rpc Reply (.gt.login.LogonReply) returns (.gt.Void);
+  rpc QueryReply (.gt.login.LogonQueryReply) returns (.gt.Void);
+  rpc LogonKeyToClient (.gt.login.LogonRandKey) returns (.gt.Void);
+  rpc OnFetchKey (.gt.login.FetchKeyResponse) returns (.gt.Void);
+  rpc OnQueryUrs (.gt.login.QueryUrsResponse) returns (.gt.Void);
+  rpc OnQRCode (.gt.login.QRCodeResponse) returns (.gt.Void);
+  rpc OnChooseGroup (.gt.login.ChooseGroupResponse) returns (.gt.Void);
+  rpc UniSDKReply (.gt.login.UniSDKLogonReply) returns (.gt.Void);
+}

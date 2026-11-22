@@ -1,0 +1,839 @@
+{
+  "client": [
+    {
+      "id": 0,
+      "name": "authenticate",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e0e0"
+    },
+    {
+      "id": 1,
+      "name": "bandwidthNotification",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e0f0"
+    },
+    {
+      "id": 2,
+      "name": "updateFrequencyNotification",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e100"
+    },
+    {
+      "id": 3,
+      "name": "setGameTime",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e110"
+    },
+    {
+      "id": 4,
+      "name": "resetEntities",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e120"
+    },
+    {
+      "id": 5,
+      "name": "createBasePlayer",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e130"
+    },
+    {
+      "id": 6,
+      "name": "createCellPlayer",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e140"
+    },
+    {
+      "id": 7,
+      "name": "spaceData",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e150"
+    },
+    {
+      "id": 8,
+      "name": "spaceViewportInfo",
+      "style": 0,
+      "length": 13,
+      "handler_rva": "0x235e160"
+    },
+    {
+      "id": 9,
+      "name": "createEntity",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e170"
+    },
+    {
+      "id": 10,
+      "name": "updateEntity",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e180"
+    },
+    {
+      "id": 11,
+      "name": "enterAoI",
+      "style": 0,
+      "length": 5,
+      "handler_rva": "0x235e190"
+    },
+    {
+      "id": 12,
+      "name": "enterAoIThruViewport",
+      "style": 0,
+      "length": 6,
+      "handler_rva": "0x235e1a0"
+    },
+    {
+      "id": 13,
+      "name": "enterAoIOnVehicle",
+      "style": 0,
+      "length": 9,
+      "handler_rva": "0x235e1b0"
+    },
+    {
+      "id": 14,
+      "name": "leaveAoI",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e1c0"
+    },
+    {
+      "id": 15,
+      "name": "tickSync",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e1d0"
+    },
+    {
+      "id": 16,
+      "name": "relativePositionReference",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e1e0"
+    },
+    {
+      "id": 17,
+      "name": "setSpaceViewport",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e1f0"
+    },
+    {
+      "id": 18,
+      "name": "setVehicle",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e200"
+    },
+    {
+      "id": 19,
+      "name": "stayPut",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e210"
+    },
+    {
+      "id": 20,
+      "name": "stayPutAlias",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e220"
+    },
+    {
+      "id": 21,
+      "name": "historyEventBegin",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e230"
+    },
+    {
+      "id": 22,
+      "name": "historyEventEnd",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e240"
+    },
+    {
+      "id": 23,
+      "name": "avatarUpdateNoAliasFullPosYawPitchRollTimeStamp",
+      "style": 0,
+      "length": 15,
+      "handler_rva": "0x235e250"
+    },
+    {
+      "id": 24,
+      "name": "avatarUpdateNoAliasFullPosYawPitchRollNoTimeStamp",
+      "style": 0,
+      "length": 13,
+      "handler_rva": "0x235e260"
+    },
+    {
+      "id": 25,
+      "name": "avatarUpdateNoAliasFullPosYawPitchTimeStamp",
+      "style": 0,
+      "length": 13,
+      "handler_rva": "0x235e270"
+    },
+    {
+      "id": 26,
+      "name": "avatarUpdateNoAliasFullPosYawPitchNoTimeStamp",
+      "style": 0,
+      "length": 11,
+      "handler_rva": "0x235e280"
+    },
+    {
+      "id": 27,
+      "name": "avatarUpdateNoAliasFullPosYawTimeStamp",
+      "style": 0,
+      "length": 12,
+      "handler_rva": "0x235e290"
+    },
+    {
+      "id": 28,
+      "name": "avatarUpdateNoAliasFullPosYawNoTimeStamp",
+      "style": 0,
+      "length": 10,
+      "handler_rva": "0x235e2a0"
+    },
+    {
+      "id": 29,
+      "name": "avatarUpdateNoAliasFullPosNoDirTimeStamp",
+      "style": 0,
+      "length": 11,
+      "handler_rva": "0x235e2b0"
+    },
+    {
+      "id": 30,
+      "name": "avatarUpdateNoAliasFullPosNoDirNoTimeStamp",
+      "style": 0,
+      "length": 9,
+      "handler_rva": "0x235e2c0"
+    },
+    {
+      "id": 31,
+      "name": "avatarUpdateNoAliasUnpackPosYawPitchRollTimeStamp",
+      "style": 0,
+      "length": 16,
+      "handler_rva": "0x235e2d0"
+    },
+    {
+      "id": 32,
+      "name": "avatarUpdateNoAliasUnpackPosYawPitchRollNoTimeStamp",
+      "style": 0,
+      "length": 14,
+      "handler_rva": "0x235e2e0"
+    },
+    {
+      "id": 33,
+      "name": "avatarUpdateNoAliasUnpackPosYawPitchTimeStamp",
+      "style": 0,
+      "length": 14,
+      "handler_rva": "0x235e2f0"
+    },
+    {
+      "id": 34,
+      "name": "avatarUpdateNoAliasUnpackPosYawPitchNoTimeStamp",
+      "style": 0,
+      "length": 12,
+      "handler_rva": "0x235e300"
+    },
+    {
+      "id": 35,
+      "name": "avatarUpdateNoAliasUnpackPosYawTimeStamp",
+      "style": 0,
+      "length": 13,
+      "handler_rva": "0x235e310"
+    },
+    {
+      "id": 36,
+      "name": "avatarUpdateNoAliasUnpackPosYawNoTimeStamp",
+      "style": 0,
+      "length": 11,
+      "handler_rva": "0x235e320"
+    },
+    {
+      "id": 37,
+      "name": "avatarUpdateNoAliasUnpackPosNoDirTimeStamp",
+      "style": 0,
+      "length": 12,
+      "handler_rva": "0x235e330"
+    },
+    {
+      "id": 38,
+      "name": "avatarUpdateNoAliasUnpackPosNoDirNoTimeStamp",
+      "style": 0,
+      "length": 10,
+      "handler_rva": "0x235e340"
+    },
+    {
+      "id": 39,
+      "name": "avatarUpdateNoAliasOnGroundYawPitchRollTimeStamp",
+      "style": 0,
+      "length": 13,
+      "handler_rva": "0x235e350"
+    },
+    {
+      "id": 40,
+      "name": "avatarUpdateNoAliasOnGroundYawPitchRollNoTimeStamp",
+      "style": 0,
+      "length": 11,
+      "handler_rva": "0x235e360"
+    },
+    {
+      "id": 41,
+      "name": "avatarUpdateNoAliasOnGroundYawPitchTimeStamp",
+      "style": 0,
+      "length": 11,
+      "handler_rva": "0x235e370"
+    },
+    {
+      "id": 42,
+      "name": "avatarUpdateNoAliasOnGroundYawPitchNoTimeStamp",
+      "style": 0,
+      "length": 9,
+      "handler_rva": "0x235e380"
+    },
+    {
+      "id": 43,
+      "name": "avatarUpdateNoAliasOnGroundYawTimeStamp",
+      "style": 0,
+      "length": 10,
+      "handler_rva": "0x235e390"
+    },
+    {
+      "id": 44,
+      "name": "avatarUpdateNoAliasOnGroundYawNoTimeStamp",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e3a0"
+    },
+    {
+      "id": 45,
+      "name": "avatarUpdateNoAliasOnGroundNoDirTimeStamp",
+      "style": 0,
+      "length": 9,
+      "handler_rva": "0x235e3b0"
+    },
+    {
+      "id": 46,
+      "name": "avatarUpdateNoAliasOnGroundNoDirNoTimeStamp",
+      "style": 0,
+      "length": 7,
+      "handler_rva": "0x235e3c0"
+    },
+    {
+      "id": 47,
+      "name": "avatarUpdateNoAliasNoPosYawPitchRollTimeStamp",
+      "style": 0,
+      "length": 10,
+      "handler_rva": "0x235e3d0"
+    },
+    {
+      "id": 48,
+      "name": "avatarUpdateNoAliasNoPosYawPitchRollNoTimeStamp",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e3e0"
+    },
+    {
+      "id": 49,
+      "name": "avatarUpdateNoAliasNoPosYawPitchTimeStamp",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e3f0"
+    },
+    {
+      "id": 50,
+      "name": "avatarUpdateNoAliasNoPosYawPitchNoTimeStamp",
+      "style": 0,
+      "length": 6,
+      "handler_rva": "0x235e400"
+    },
+    {
+      "id": 51,
+      "name": "avatarUpdateNoAliasNoPosYawTimeStamp",
+      "style": 0,
+      "length": 7,
+      "handler_rva": "0x235e410"
+    },
+    {
+      "id": 52,
+      "name": "avatarUpdateNoAliasNoPosYawNoTimeStamp",
+      "style": 0,
+      "length": 5,
+      "handler_rva": "0x235e420"
+    },
+    {
+      "id": 53,
+      "name": "avatarUpdateNoAliasNoPosNoDirTimeStamp",
+      "style": 0,
+      "length": 6,
+      "handler_rva": "0x235e430"
+    },
+    {
+      "id": 54,
+      "name": "avatarUpdateNoAliasNoPosNoDirNoTimeStamp",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e440"
+    },
+    {
+      "id": 55,
+      "name": "avatarUpdateAliasFullPosYawPitchRollTimeStamp",
+      "style": 0,
+      "length": 12,
+      "handler_rva": "0x235e450"
+    },
+    {
+      "id": 56,
+      "name": "avatarUpdateAliasFullPosYawPitchRollNoTimeStamp",
+      "style": 0,
+      "length": 10,
+      "handler_rva": "0x235e460"
+    },
+    {
+      "id": 57,
+      "name": "avatarUpdateAliasFullPosYawPitchTimeStamp",
+      "style": 0,
+      "length": 10,
+      "handler_rva": "0x235e470"
+    },
+    {
+      "id": 58,
+      "name": "avatarUpdateAliasFullPosYawPitchNoTimeStamp",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e480"
+    },
+    {
+      "id": 59,
+      "name": "avatarUpdateAliasFullPosYawTimeStamp",
+      "style": 0,
+      "length": 9,
+      "handler_rva": "0x235e490"
+    },
+    {
+      "id": 60,
+      "name": "avatarUpdateAliasFullPosYawNoTimeStamp",
+      "style": 0,
+      "length": 7,
+      "handler_rva": "0x235e4a0"
+    },
+    {
+      "id": 61,
+      "name": "avatarUpdateAliasFullPosNoDirTimeStamp",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e4b0"
+    },
+    {
+      "id": 62,
+      "name": "avatarUpdateAliasFullPosNoDirNoTimeStamp",
+      "style": 0,
+      "length": 6,
+      "handler_rva": "0x235e4c0"
+    },
+    {
+      "id": 63,
+      "name": "avatarUpdateAliasUnpackPosYawPitchRollTimeStamp",
+      "style": 0,
+      "length": 13,
+      "handler_rva": "0x235e4d0"
+    },
+    {
+      "id": 64,
+      "name": "avatarUpdateAliasUnpackPosYawPitchRollNoTimeStamp",
+      "style": 0,
+      "length": 11,
+      "handler_rva": "0x235e4e0"
+    },
+    {
+      "id": 65,
+      "name": "avatarUpdateAliasUnpackPosYawPitchTimeStamp",
+      "style": 0,
+      "length": 11,
+      "handler_rva": "0x235e4f0"
+    },
+    {
+      "id": 66,
+      "name": "avatarUpdateAliasUnpackPosYawPitchNoTimeStamp",
+      "style": 0,
+      "length": 9,
+      "handler_rva": "0x235e500"
+    },
+    {
+      "id": 67,
+      "name": "avatarUpdateAliasUnpackPosYawTimeStamp",
+      "style": 0,
+      "length": 10,
+      "handler_rva": "0x235e510"
+    },
+    {
+      "id": 68,
+      "name": "avatarUpdateAliasUnpackPosYawNoTimeStamp",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e520"
+    },
+    {
+      "id": 69,
+      "name": "avatarUpdateAliasUnpackPosNoDirTimeStamp",
+      "style": 0,
+      "length": 9,
+      "handler_rva": "0x235e530"
+    },
+    {
+      "id": 70,
+      "name": "avatarUpdateAliasUnpackPosNoDirNoTimeStamp",
+      "style": 0,
+      "length": 7,
+      "handler_rva": "0x235e540"
+    },
+    {
+      "id": 71,
+      "name": "avatarUpdateAliasOnGroundYawPitchRollTimeStamp",
+      "style": 0,
+      "length": 10,
+      "handler_rva": "0x235e550"
+    },
+    {
+      "id": 72,
+      "name": "avatarUpdateAliasOnGroundYawPitchRollNoTimeStamp",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e560"
+    },
+    {
+      "id": 73,
+      "name": "avatarUpdateAliasOnGroundYawPitchTimeStamp",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e570"
+    },
+    {
+      "id": 74,
+      "name": "avatarUpdateAliasOnGroundYawPitchNoTimeStamp",
+      "style": 0,
+      "length": 6,
+      "handler_rva": "0x235e580"
+    },
+    {
+      "id": 75,
+      "name": "avatarUpdateAliasOnGroundYawTimeStamp",
+      "style": 0,
+      "length": 7,
+      "handler_rva": "0x235e590"
+    },
+    {
+      "id": 76,
+      "name": "avatarUpdateAliasOnGroundYawNoTimeStamp",
+      "style": 0,
+      "length": 5,
+      "handler_rva": "0x235e5a0"
+    },
+    {
+      "id": 77,
+      "name": "avatarUpdateAliasOnGroundNoDirTimeStamp",
+      "style": 0,
+      "length": 6,
+      "handler_rva": "0x235e5b0"
+    },
+    {
+      "id": 78,
+      "name": "avatarUpdateAliasOnGroundNoDirNoTimeStamp",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e5c0"
+    },
+    {
+      "id": 79,
+      "name": "avatarUpdateAliasNoPosYawPitchRollTimeStamp",
+      "style": 0,
+      "length": 7,
+      "handler_rva": "0x235e5d0"
+    },
+    {
+      "id": 80,
+      "name": "avatarUpdateAliasNoPosYawPitchRollNoTimeStamp",
+      "style": 0,
+      "length": 5,
+      "handler_rva": "0x235e5e0"
+    },
+    {
+      "id": 81,
+      "name": "avatarUpdateAliasNoPosYawPitchTimeStamp",
+      "style": 0,
+      "length": 5,
+      "handler_rva": "0x235e5f0"
+    },
+    {
+      "id": 82,
+      "name": "avatarUpdateAliasNoPosYawPitchNoTimeStamp",
+      "style": 0,
+      "length": 3,
+      "handler_rva": "0x235e600"
+    },
+    {
+      "id": 83,
+      "name": "avatarUpdateAliasNoPosYawTimeStamp",
+      "style": 0,
+      "length": 4,
+      "handler_rva": "0x235e610"
+    },
+    {
+      "id": 84,
+      "name": "avatarUpdateAliasNoPosYawNoTimeStamp",
+      "style": 0,
+      "length": 2,
+      "handler_rva": "0x235e620"
+    },
+    {
+      "id": 85,
+      "name": "avatarUpdateAliasNoPosNoDirTimeStamp",
+      "style": 0,
+      "length": 3,
+      "handler_rva": "0x235e630"
+    },
+    {
+      "id": 86,
+      "name": "avatarUpdateAliasNoPosNoDirNoTimeStamp",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e640"
+    },
+    {
+      "id": 87,
+      "name": "detailedPosition",
+      "style": 0,
+      "length": 28,
+      "handler_rva": "0x235e650"
+    },
+    {
+      "id": 88,
+      "name": "forcedPosition",
+      "style": 0,
+      "length": 36,
+      "handler_rva": "0x235e660"
+    },
+    {
+      "id": 89,
+      "name": "controlEntity",
+      "style": 0,
+      "length": 5,
+      "handler_rva": "0x235e670"
+    },
+    {
+      "id": 90,
+      "name": "voiceData",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e680"
+    },
+    {
+      "id": 91,
+      "name": "restoreClient",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e690"
+    },
+    {
+      "id": 92,
+      "name": "restoreBaseApp",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e6a0"
+    },
+    {
+      "id": 93,
+      "name": "versionPointIdentity",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e6b0"
+    },
+    {
+      "id": 94,
+      "name": "versionPointSummary",
+      "style": 0,
+      "length": 34,
+      "handler_rva": "0x235e6c0"
+    },
+    {
+      "id": 95,
+      "name": "resourceFragment",
+      "style": 1,
+      "length": 2,
+      "handler_rva": "0x235e6d0"
+    },
+    {
+      "id": 96,
+      "name": "resourceVersionStatus",
+      "style": 0,
+      "length": 8,
+      "handler_rva": "0x235e6e0"
+    },
+    {
+      "id": 97,
+      "name": "resourceVersionTag",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e6f0"
+    },
+    {
+      "id": 98,
+      "name": "loggedOff",
+      "style": 0,
+      "length": 1,
+      "handler_rva": "0x235e700"
+    },
+    {
+      "id": 99,
+      "name": "shortEntityMessage",
+      "style": 1,
+      "length": 1,
+      "handler_rva": null
+    },
+    {
+      "id": 100,
+      "name": "longEntityMessage",
+      "style": 1,
+      "length": 2,
+      "handler_rva": null
+    }
+  ],
+  "baseapp": [
+    {
+      "id": 0,
+      "name": "baseAppLogin",
+      "style": 1,
+      "length": 2,
+      "handler_rva": null
+    },
+    {
+      "id": 1,
+      "name": "authenticate",
+      "style": 0,
+      "length": 4,
+      "handler_rva": null
+    },
+    {
+      "id": 2,
+      "name": "avatarUpdateImplicit",
+      "style": 0,
+      "length": 24,
+      "handler_rva": null
+    },
+    {
+      "id": 3,
+      "name": "avatarUpdateExplicit",
+      "style": 0,
+      "length": 32,
+      "handler_rva": null
+    },
+    {
+      "id": 4,
+      "name": "avatarUpdateWardImplicit",
+      "style": 0,
+      "length": 24,
+      "handler_rva": null
+    },
+    {
+      "id": 5,
+      "name": "avatarUpdateWardExplicit",
+      "style": 0,
+      "length": 32,
+      "handler_rva": null
+    },
+    {
+      "id": 6,
+      "name": "switchInterface",
+      "style": 0,
+      "length": 0,
+      "handler_rva": null
+    },
+    {
+      "id": 7,
+      "name": "requestEntityUpdate",
+      "style": 1,
+      "length": 2,
+      "handler_rva": null
+    },
+    {
+      "id": 8,
+      "name": "enableEntities",
+      "style": 0,
+      "length": 8,
+      "handler_rva": null
+    },
+    {
+      "id": 9,
+      "name": "setSpaceViewportAck",
+      "style": 0,
+      "length": 8,
+      "handler_rva": null
+    },
+    {
+      "id": 10,
+      "name": "setVehicleAck",
+      "style": 0,
+      "length": 8,
+      "handler_rva": null
+    },
+    {
+      "id": 11,
+      "name": "restoreClientAck",
+      "style": 0,
+      "length": 4,
+      "handler_rva": null
+    },
+    {
+      "id": 12,
+      "name": "identifyVersionPoint",
+      "style": 1,
+      "length": 2,
+      "handler_rva": null
+    },
+    {
+      "id": 13,
+      "name": "summariseVersionPoint",
+      "style": 1,
+      "length": 2,
+      "handler_rva": null
+    },
+    {
+      "id": 14,
+      "name": "commenceResourceDownload",
+      "style": 1,
+      "length": 2,
+      "handler_rva": null
+    },
+    {
+      "id": 15,
+      "name": "disconnectClient",
+      "style": 0,
+      "length": 1,
+      "handler_rva": null
+    },
+    {
+      "id": 16,
+      "name": "resourceVersionTag",
+      "style": 0,
+      "length": 1,
+      "handler_rva": null
+    },
+    {
+      "id": 17,
+      "name": "entityMessage",
+      "style": 1,
+      "length": 2,
+      "handler_rva": null
+    }
+  ]
+}
