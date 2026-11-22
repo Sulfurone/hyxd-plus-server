@@ -167,6 +167,9 @@ def run():
         interaction_scope = {}
         execfile('I:/hyxd/hyp/_local_server/offline_interactions.py', interaction_scope)
         interaction_scope['install'](player, STATE, log)
+        combat_scope = {}
+        execfile('I:/hyxd/hyp/_local_server/offline_combat.py', combat_scope)
+        combat_scope['install'](player, STATE, log)
         weapon = player.getActivedWeapon()
         if weapon and hasattr(weapon, 'waitRealThrow') and weapon.isThrow:
             log('Completing stalled local grenade throw')
