@@ -32,6 +32,7 @@ class WorldTests(unittest.TestCase):
             physics=SimpleNamespace(teleport=Mock()))
         types = SimpleNamespace(AVATAR_STATUS_STARTPARACHUTING=3)
         self.owner.inParachuting = lambda: self.owner.avatarStatus in (3, 4)
+        self.owner.isOnPlane = lambda: self.owner.avatarStatus == 2
         self.refresh = Mock()
         self.owner.refreshAvatarStatus = NativeMethod({'gametypes': types}, self.refresh)
         self.bw = SimpleNamespace(player=lambda: self.owner,

@@ -46,11 +46,12 @@ def retry(delay=1.0):
 
 def bind_model(player):
     on_vehicle = player.isOnVehicle()
-    if player.inParachuting() or on_vehicle:
+    on_plane = player.isOnPlane()
+    if player.inParachuting() or on_vehicle or on_plane:
         servo = STATE.get('pose_servo')
         if servo is not None and servo in player.model.motors:
             player.model.delMotor(servo)
-        if not on_vehicle:
+        if not on_vehicle and not on_plane:
             player.model.position = player.position
         return
     climbing = getattr(player, 'climbCode', '') or (player.physics is not None and player.physics.isClimbing)
@@ -164,6 +165,7 @@ def run():
             STATE['health_initialized'] = True
         types = player._onLoaded.im_func.func_globals['gametypes']
         if (player.avatarStatus != types.AVATAR_STATUS_IN_COMBAT
+                and player.avatarStatus != types.AVATAR_STATUS_ONBOARD
                 and player.avatarStatus not in types.AVATAR_STATUS_PARACHUTINGS):
             player.avatarStatus = types.AVATAR_STATUS_IN_COMBAT
             player.refreshAvatarStatus(player.avatarStatus)

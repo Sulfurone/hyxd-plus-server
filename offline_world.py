@@ -39,7 +39,7 @@ def set_status(owner, status, log):
 
 def start_drop(owner, state, log):
     types = owner.refreshAvatarStatus.im_func.func_globals['gametypes']
-    if owner.inParachuting() or getattr(owner, 'climbCode', '') or state.get('drop_pending'):
+    if owner.inParachuting() or owner.isOnPlane() or getattr(owner, 'climbCode', '') or state.get('drop_pending'):
         return
     position = owner.position
     hit = BigWorld.collide(owner.spaceID, (position.x, position.y + 2, position.z),
@@ -613,6 +613,12 @@ def install_vehicles(player, state, log):
         if len(old) != seats:
             entity.vPassengers = (old + [0] * seats)[:seats]
             log('Local vehicle seats repaired id=%r count=%r->%r' % (entity.id, len(old), seats))
+        data = vd.get(entity.vTypeId, {})
+        wheels = max(2, int(data.get('wheelNum', 4)))
+        old_wheels = list(entity.wheelDurations)
+        if len(old_wheels) != wheels:
+            entity.wheelDurations = (old_wheels + [int(data.get('wheelDuration', 8000))] * wheels)[:wheels]
+            log('Local vehicle wheel state repaired id=%r count=%r->%r' % (entity.id, len(old_wheels), wheels))
     # Retire surplus unoccupied physics vehicles left by the previous spawner.
     keep = sorted(actual, key=lambda entity: sum((a-b)**2 for a,b in zip(entity.position, player.position)))
     for entity in keep[1:]:
@@ -939,6 +945,9 @@ def install(player, state, log):
     install_parachute(player, state, log)
     install_loot(player, state, log)
     install_vehicles(player, state, log)
+    flight_scope = {}
+    execfile('I:/hyxd/hyp/_local_server/offline_flight.py', flight_scope)
+    flight_scope['install'](player, state, log)
     if state.get('world_diagnostic_version') == 11:
         return
     module = next((module for name, module in sys.modules.items()
