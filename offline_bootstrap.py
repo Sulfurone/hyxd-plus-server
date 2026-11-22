@@ -19,6 +19,8 @@ gameglobal._hypOfflineMotionGeneration = getattr(gameglobal, '_hypOfflineMotionG
 STATE = getattr(gameglobal, '_hypLocalOffline', {})
 gameglobal._hypLocalOffline = STATE
 _last_position = None
+_last_facing = None
+_last_facing_time = 0
 
 
 def log(message):
@@ -41,10 +43,24 @@ def retry(delay=1.0):
 
 
 def bind_model(player):
+    climbing = getattr(player, 'climbCode', '') or (player.physics is not None and player.physics.isClimbing)
+    if climbing:
+        servo = STATE.get('pose_servo')
+        if servo is not None and servo in player.model.motors:
+            player.model.delMotor(servo)
+        heading = STATE.get('climb_heading', player.yaw)
+        transform = STATE.get('render_transform')
+        if transform is not None:
+            transform.setRotateY(heading)
+            transform.translation = player.position
+        # Native actionPromoteCallback changes matcherCoupled while animation
+        # root motion runs. Do not overwrite that decision each frame.
+        player.model.yaw = heading
+        return
     if 'render_transform' not in STATE:
         STATE['render_transform'] = Math.Matrix()
     transform = STATE['render_transform']
-    transform.setRotateY(player.yaw)
+    transform.setRotateY(BigWorld.dcursor().yaw)
     transform.translation = player.position
     if player.model.motors and STATE.get('bound_model') is not player.model:
         matcher = player.model.motors[0]
@@ -52,8 +68,23 @@ def bind_model(player):
         # Keep original animation; local entities have no server transform stream.
         matcher.matchActionOnly = True
         matcher.matcherCoupled = False
+        matcher.enableYaw = False
         STATE['bound_model'] = player.model
+    if STATE.get('pose_servo_model') is not player.model:
+        servo = BigWorld.Servo(transform)
+        STATE['pose_servo'] = servo
+        STATE['pose_servo_model'] = player.model
+        log('Created native model pose motor')
+    servo = STATE['pose_servo']
+    if servo not in player.model.motors:
+        player.model.addMotor(servo)
     player.model.position = player.position
+    player.model.yaw = BigWorld.dcursor().yaw
+    if player.model.motors:
+        matcher = player.model.motors[0]
+        matcher.enableYaw = False
+        matcher.matchActionOnly = True
+        matcher.matcherCoupled = False
 
 
 def run():
@@ -68,6 +99,7 @@ def run():
             retry()
             return
         gameglobal.isOffline = True
+        BigWorld.enableOfflineFocus(False)
         player = BigWorld.player()
         if player is None:
             manager = game.lobbyScene.getManagerInstance()
@@ -130,20 +162,45 @@ def run():
             player.set_hp(0)
         STATE['ready'] = True
         stage('Offline map and player ready')
-        log('Ready id=%r position=%r avatarStatus=%r model=%r' % (player.id, player.position, player.avatarStatus, sources))
+        log('Native transform motors=%r' % [name for name in dir(BigWorld) if any(word in name.lower() for word in ('servo', 'motor', 'tracker', 'yaw', 'filter', 'matrix'))])
+        log('Combat snapshot holding=%r hp=%r maxHp=%r equipState=%r inScriptControl=%r' % (player.holdingEquipment, player.hp, player.maxHp, player.equipState, player.inScriptControl))
+        interaction_scope = {}
+        execfile('I:/hyxd/hyp/_local_server/offline_interactions.py', interaction_scope)
+        interaction_scope['install'](player, STATE, log)
+        weapon = player.getActivedWeapon()
+        if weapon and hasattr(weapon, 'waitRealThrow') and weapon.isThrow:
+            log('Completing stalled local grenade throw')
+            weapon.realThrowGrenade()
+            weapon.isHold = False
+            weapon.isThrow = False
+            weapon.waitRealThrow = False
+        cam = BigWorld.camera()
+        dc = BigWorld.dcursor()
+        ap = getattr(player, 'ap', None)
+        ap_info = {k: getattr(ap, k, None) for k in dir(ap) if 'yaw' in k.lower() or 'turn' in k.lower() or 'seek' in k.lower() or 'lock' in k.lower() or 'dir' in k.lower()} if ap else {}
+        dc_info = {k: getattr(dc, k, None) for k in dir(dc) if not k.startswith('_') and not callable(getattr(dc, k, None))}
+        log('Ready id=%r pos=%r yaw=%r model_yaw=%r cam_dir=%r dc=%r ap=%r' % (
+            player.id, player.position, player.yaw, player.model.yaw, getattr(cam, 'direction', None),
+            dc_info, ap_info))
     except Exception:
         log(traceback.format_exc())
         retry(2.0)
 
 
 def monitor_movement():
-    global _last_position
+    global _last_position, _last_facing, _last_facing_time
     if not current():
         return
     try:
         player = BigWorld.player()
         if STATE.get('ready') and player is not None and player.model is not None:
+            native_model_yaw = player.model.yaw
             bind_model(player)
+            facing = (BigWorld.dcursor().yaw, player.yaw, player.model.yaw)
+            if time.time() - _last_facing_time > 0.5 and (not _last_facing or abs(facing[0] - _last_facing[0]) > 0.15):
+                log('Facing cameraYaw=%r playerYaw=%r modelYaw=%r nativeModelYaw=%r pitch=%r roll=%r' % (facing[0], facing[1], facing[2], native_model_yaw, player.pitch, player.roll))
+                _last_facing = facing
+                _last_facing_time = time.time()
             position = tuple(player.position)
             if _last_position is None or sum((a-b)**2 for a, b in zip(position, _last_position)) > 0.0025:
                 log('Movement position=%r model=%r camera=%r' % (position, player.model.position, BigWorld.camera().position))
