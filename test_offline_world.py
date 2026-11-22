@@ -102,9 +102,14 @@ class WorldTests(unittest.TestCase):
         self.commands = SimpleNamespace(**{name: Mock() for name in
             ('pickItemToInvFromGround', 'pickItemToInvFromItemHeap',
              'pickItemToEquipmentFromGround', 'pickItemToEquipmentFromItemHeap',
-             'discardItemToGroundFromInv', 'discardItemToGroundFromEquipment')})
+             'discardItemToGroundFromInv', 'discardItemToGroundFromEquipment',
+             'pickItemToEquipmentFromInv', 'replaceItemToEquipmentFromInv',
+             'replaceItemToEquipmentFromGround', 'replaceItemToEquipmentFromItemHeap',
+             'discardItemToInvFromEquipment', 'cancelAction', 'useCommonItem')})
         self.world.find_module = lambda name: self.commands if 'servercmd' in name else self.drop_module
-        inv = SimpleNamespace(loadAmmo=NativeMethod({'Item': Item, 'combatconst': object()}, Mock()),
+        definitions = {item_id: {} for item_id in (10203, 10103, 10501, 30102, 30103, 30105)}
+        inv = SimpleNamespace(loadAmmo=NativeMethod({'Item': Item, 'combatconst': object(),
+            'ID': SimpleNamespace(data=definitions)}, Mock()),
             calcMaxNumCanInsertItemToInv=lambda item_id: 1000,
             insertItemToInv=insert, checkSum=123,
             itemListContainer=SimpleNamespace(itemList=[]), _modifiedInvIds=set(),
@@ -112,6 +117,11 @@ class WorldTests(unittest.TestCase):
             getItemInInv=lambda uid: self.bag_items.get(uid), removeInvItem=remove,
             getInvWeight=lambda: 0, getWeightLimit=lambda: 1000)
         self.state['starter_backpack_initialized'] = True
+        self.state['consumable_probe'] = 1
+        self.owner.useItemOfDrugChecker = NativeMethod({'IDD': SimpleNamespace(data={})}, Mock())
+        # Medicine has its own lifecycle tests; isolate the loot scheduler here.
+        self.world.execfile = lambda path, scope: scope.update(install=lambda *args: None)
+        self.bw.callback = lambda delay, callback: self.pending.append((delay, callback)) if delay < 3 else None
         self.bw.dcursor = lambda: SimpleNamespace(yaw=0)
         self.owner.clientEquipsAndInv = inv
         self.owner.refreshCurrentAmmo = Mock()
@@ -184,6 +194,21 @@ class WorldTests(unittest.TestCase):
         self.assertFalse(self.commands.pickItemToInvFromGround((), uid, entry['count']))
         self.assertIsNotNone(entry['fake_id'])
         self.assertEqual(self.bag, {})
+
+    def test_loot_creation_is_batched_and_live_models_are_bounded(self):
+        self.prepare_loot()
+        self.pending.clear()
+        self.state.pop('loot_spatial_grid', None)
+        self.drop_module.IHRIDD.data = {index: {'position': (index % 10, 0, index // 10)}
+                                         for index in range(100)}
+        self.world.install_loot(self.owner, self.state, self.log)
+        before = len(self.entities)
+        self.pending.pop(0)[1]()
+        self.assertLessEqual(len(self.entities) - before, 4)
+        for _ in range(30):
+            self.pending.pop(0)[1]()
+            self.assertLessEqual(len(self.entities), 72)
+        self.assertEqual(len(self.entities), 72)
 
 
 if __name__ == '__main__':

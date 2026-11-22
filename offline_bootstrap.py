@@ -21,6 +21,8 @@ gameglobal._hypLocalOffline = STATE
 _last_position = None
 _last_facing = None
 _last_facing_time = 0
+_last_move_log_time = 0
+_last_performance_time = 0
 
 
 def log(message):
@@ -43,11 +45,13 @@ def retry(delay=1.0):
 
 
 def bind_model(player):
-    if player.inParachuting():
+    on_vehicle = player.isOnVehicle()
+    if player.inParachuting() or on_vehicle:
         servo = STATE.get('pose_servo')
         if servo is not None and servo in player.model.motors:
             player.model.delMotor(servo)
-        player.model.position = player.position
+        if not on_vehicle:
+            player.model.position = player.position
         return
     climbing = getattr(player, 'climbCode', '') or (player.physics is not None and player.physics.isClimbing)
     if climbing:
@@ -143,8 +147,21 @@ def run():
             stage('Waiting for original body model')
             retry()
             return
-        player.maxHp = 100
-        player.hp = 100
+        if not STATE.get('health_initialized'):
+            old_max_hp = getattr(player, 'maxHp', 0)
+            old_hp = getattr(player, 'hp', 0)
+            player.maxHp = 10000
+            player.hp = 10000
+            if hasattr(player, 'power'):
+                old_power = player.power
+                player.power = 0
+                if hasattr(player, 'set_power'):
+                    player.set_power(old_power)
+            if hasattr(player, 'set_maxHp'):
+                player.set_maxHp(old_max_hp)
+            if hasattr(player, 'set_hp'):
+                player.set_hp(old_hp)
+            STATE['health_initialized'] = True
         types = player._onLoaded.im_func.func_globals['gametypes']
         if (player.avatarStatus != types.AVATAR_STATUS_IN_COMBAT
                 and player.avatarStatus not in types.AVATAR_STATUS_PARACHUTINGS):
@@ -160,13 +177,27 @@ def run():
             player.physics.teleport(Math.Vector3(position.x, position.y + 0.2, position.z))
             STATE['positioned'] = True
         bind_model(player)
+        if not getattr(player, 'teamEntIds', None):
+            player.teamEntIds = [player.id]
+        if not getattr(player, 'teamInfo', None) or player.id not in player.teamInfo:
+            player.teamInfo = {
+                player.id: {
+                    'roleName': getattr(player, 'roleName', 'Player'),
+                    'pos': tuple(player.position),
+                    'yaw': BigWorld.dcursor().yaw,
+                    'isOnVehicle': False,
+                    'avatarStatus': player.avatarStatus,
+                    'isDead': False,
+                    'isOffline': False,
+                }
+            }
         gameglobal.rds.ui.loginView.hide()
         gameglobal.rds.ui.littleMap.show()
+        lm = gameglobal.rds.ui.littleMap
+        if lm.widget is not None and getattr(lm, 'playerIcon', None) is None:
+            lm.loadTeamIcon()
+            lm.refreshIcons()
         gameglobal.rds.ui.playerChat.show()
-        if hasattr(player, 'set_maxHp'):
-            player.set_maxHp(0)
-        if hasattr(player, 'set_hp'):
-            player.set_hp(0)
         STATE['ready'] = True
         stage('Offline map and player ready')
         log('Native transform motors=%r' % [name for name in dir(BigWorld) if any(word in name.lower() for word in ('servo', 'motor', 'tracker', 'yaw', 'filter', 'matrix'))])
@@ -204,7 +235,7 @@ def run():
 
 
 def monitor_movement():
-    global _last_position, _last_facing, _last_facing_time
+    global _last_position, _last_facing, _last_facing_time, _last_move_log_time, _last_performance_time
     if not current():
         return
     try:
@@ -218,9 +249,15 @@ def monitor_movement():
                 _last_facing = facing
                 _last_facing_time = time.time()
             position = tuple(player.position)
-            if _last_position is None or sum((a-b)**2 for a, b in zip(position, _last_position)) > 0.0025:
+            if time.time() - _last_performance_time > 10:
+                log('Local performance fps=%r entities=%r vehicles=%r lootModels=%r' % (
+                    BigWorld.getFps(), len(BigWorld.entities), len(STATE.get('local_vehicles', {})),
+                    sum(entry.get('fake_id') is not None for entry in STATE.get('local_loot', {}).values())))
+                _last_performance_time = time.time()
+            if time.time() - _last_move_log_time > 1 and (_last_position is None or sum((a-b)**2 for a, b in zip(position, _last_position)) > 0.0025):
                 log('Movement position=%r model=%r camera=%r' % (position, player.model.position, BigWorld.camera().position))
                 _last_position = position
+                _last_move_log_time = time.time()
     except Exception:
         log(traceback.format_exc())
     BigWorld.callback(0.0, monitor_movement)
