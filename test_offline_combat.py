@@ -15,15 +15,20 @@ class Item:
 class Inventory:
     def __init__(self):
         self.items, self.bag = {}, {}
-        self.itemListContainer = SimpleNamespace(insertItem=self.insert_bag)
+        self.itemListContainer = SimpleNamespace(insertItem=self.insert_bag,
+                                                 countTotalWrapById=self.count_bag)
         self.loadAmmo = Mock(side_effect=self.load)
         self.loadAmmo.im_func = SimpleNamespace(func_globals={
             'Item': Item, 'combatconst': SimpleNamespace(
                 EQUIPMENT_SUBSLOT_BODY=0, EQUIPMENT_SUBSLOT_AMMO=7,
+                LIFECODE_DEAD=2,
                 COMBINED_EQUIPMENT_ID_PROP_MAP={1: 'equipMain', 2: 'equipSecondary'})})
 
     def insert_bag(self, item):
         self.bag[item.itemId] = self.bag.get(item.itemId, 0) + item.cwrap
+
+    def count_bag(self, item_id):
+        return self.bag.get(item_id, 0)
 
     def getItemInEquipment(self, slot, subslot):
         return self.items.get((slot, subslot))
@@ -69,14 +74,21 @@ class CombatBridgeTests(unittest.TestCase):
         for slot, gun_id, ammo in ((1, 10203, 30102), (2, 10103, 30103)):
             gun = Gun()
             gun.slotId, gun.id, gun.bulletType, gun.owner = slot, gun_id, ammo, self.player
+            gun.getItemData = lambda: {'hitDamage': 4200, 'partDamage': {1: 2.4, 5: 1}}
             self.guns.append(gun)
         self.player.equipWeapons = {gun.slotId: gun for gun in self.guns}
         self.commands = SimpleNamespace(beginAttackWithRayWeapon=Mock(),
-            beginAttackWithDestributeWeapon=Mock(), reloadActiveWeapon=Mock())
+            beginAttackWithDestributeWeapon=Mock(), reloadActiveWeapon=Mock(),
+            attackWithRayWeapon=Mock(), attackWithDestributeWeapon=Mock(),
+            utils=SimpleNamespace(getHitId=lambda encoded: encoded >> 5))
         self.original_fire = self.commands.beginAttackWithRayWeapon
         self.original_reload = self.commands.reloadActiveWeapon
         self.global_state = SimpleNamespace(isOffline=True)
-        modules = {'BigWorld': SimpleNamespace(player=lambda: self.player),
+        self.entities = {}
+        self.callbacks = Mock()
+        self.state = {}
+        modules = {'BigWorld': SimpleNamespace(player=lambda: self.player,
+                       entities=self.entities, callback=self.callbacks),
                    'gameglobal': self.global_state,
                    'weapon.weaponGun': SimpleNamespace(WeaponBaseGun=Gun),
                    'helpers.serverCmd': self.commands}
@@ -90,7 +102,7 @@ class CombatBridgeTests(unittest.TestCase):
         self.install()
 
     def install(self):
-        self.bridge.install(self.player, {}, lambda message: None)
+        self.bridge.install(self.player, self.state, lambda message: None)
 
     def test_original_capacity_and_inventory_drive_display(self):
         self.assertEqual([(g.bulletCnt, g.bulletMaxCnt, g.bulletInBag) for g in self.guns],
@@ -124,6 +136,34 @@ class CombatBridgeTests(unittest.TestCase):
         self.original_fire.assert_called_once_with(1, (2,), (3,), 1)
         self.original_reload.assert_called_once_with(2)
         self.assertEqual(self.guns[0].bulletCnt, 1)
+
+    def target(self):
+        target = SimpleNamespace(hp=10000, lifeCode=0, set_hp=Mock(), set_lifeCode=Mock())
+        target.isDead = lambda: target.lifeCode == 2
+        self.entities[42] = target
+        self.state['local_targets'] = {42: {}}
+        return target
+
+    def test_body_hits_use_weapon_damage_and_trigger_native_death_once(self):
+        target = self.target()
+        for expected in (5800, 1600, 0):
+            self.commands.attackWithRayWeapon(0, (), (), (), 1, 42, 5 << 5, ())
+            self.assertEqual(target.hp, expected)
+        self.assertTrue(target.isDead())
+        target.set_lifeCode.assert_called_once_with(0)
+        self.assertFalse(self.commands.attackWithRayWeapon(0, (), (), (), 1, 42, 5 << 5, ()))
+        self.callbacks.assert_called_once()
+
+    def test_head_damage_and_distributed_hits_use_native_hit_reports(self):
+        target = self.target()
+        self.commands.attackWithDestributeWeapon(0, (), (), [()], 1, [42], [1 << 5], [()])
+        self.assertEqual(target.hp, 0)
+
+    def test_unregistered_entities_do_not_take_local_target_damage(self):
+        target = self.target()
+        self.state['local_targets'].clear()
+        self.assertFalse(self.commands.attackWithRayWeapon(0, (), (), (), 1, 42, 5 << 5, ()))
+        self.assertEqual(target.hp, 10000)
 
 
 if __name__ == '__main__':

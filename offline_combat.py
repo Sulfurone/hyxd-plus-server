@@ -1,6 +1,7 @@
 """Local combat bridge for the original Python 2 client."""
 import sys
 import uuid
+import copy
 
 import BigWorld
 import gameglobal
@@ -12,6 +13,13 @@ def install(player, state, log):
     native = inventory.loadAmmo.im_func.func_globals
     constants = native['combatconst']
     Item = native['Item']
+    if not state.get('damage_data_logged'):
+        for weapon in weapons.values():
+            if weapon is not None and getattr(weapon, 'isGun', False):
+                log('Local gun damage configuration id=%r data=%r' % (
+                    weapon.id, {key: value for key, value in weapon.getItemData().items()
+                     if any(word in key.lower() for word in ('damage', 'hurt', 'power', 'hit'))}))
+        state['damage_data_logged'] = True
 
     def item(item_id, count=1, slots=None):
         return Item(uuid.uuid4().hex, item_id, count, slots or {})
@@ -98,6 +106,82 @@ def install(player, state, log):
         return result
 
     command_module.reloadActiveWeapon = reload_active_weapon
+
+    def apply_hit(slot, entity_id, encoded_part):
+        targets = state.get('local_targets', {})
+        entry = targets.get(entity_id)
+        target = BigWorld.entities.get(entity_id)
+        owner = BigWorld.player()
+        if entry is None or target is None or target.hp <= 0:
+            return False
+        weapon = next((weapon for weapon in owner.equipWeapons.values()
+                       if weapon is not None and getattr(weapon, 'slotId', None) == slot), None)
+        if weapon is None:
+            return False
+        data = weapon.getItemData()
+        part = command_module.utils.getHitId(encoded_part)
+        damage = int(round(data.get('hitDamage', 0) * data.get('partDamage', {}).get(part, 1)))
+        old_hp = target.hp
+        target.hp = max(0, old_hp - damage)
+        target.set_hp(old_hp)
+        log('Local bullet hit id=%r slot=%r part=%r damage=%r hp=%r->%r' % (
+            entity_id, slot, part, damage, old_hp, target.hp))
+        if target.hp == 0:
+            old_life = target.lifeCode
+            target.lifeCode = constants.LIFECODE_DEAD
+            target.set_lifeCode(old_life)
+            log('Local target defeated id=%r nativeDeath=%r' % (entity_id, target.isDead()))
+
+            def replace_target():
+                if BigWorld.entities.get(entity_id) is not None:
+                    BigWorld.destroyEntity(entity_id)
+                targets.pop(entity_id, None)
+                scope = {}
+                execfile('I:/hyxd/hyp/_local_server/offline_targets.py', scope)
+                scope['install'](BigWorld.player(), state, log)
+
+            BigWorld.callback(8, replace_target)
+        return True
+
+    for name in ('attackWithRayWeapon', 'attackWithDestributeWeapon'):
+        original = getattr(command_module, '_hypOriginal_' + name,
+                           getattr(command_module, name))
+        setattr(command_module, '_hypOriginal_' + name, original)
+
+        def hit(now, start, direction, end, slot, entity_ids, body_parts, positions,
+                original=original, distributed=(name == 'attackWithDestributeWeapon')):
+            if not gameglobal.isOffline:
+                return original(now, start, direction, end, slot, entity_ids, body_parts, positions)
+            if distributed:
+                return [apply_hit(slot, entity_id, part)
+                        for entity_id, part in zip(entity_ids, body_parts)]
+            return apply_hit(slot, entity_ids, body_parts)
+
+        setattr(command_module, name, hit)
+
+    if not state.get('native_ammo_audited'):
+        # Verify the extracted client's real inventory methods on a copy.
+        # This neither fires the player's weapon nor spends their ammunition.
+        audit = copy.deepcopy(inventory)
+        for weapon in weapons.values():
+            if weapon is None or not getattr(weapon, 'isGun', False):
+                continue
+            slot = weapon.slotId
+            ammo = audit.getItemInEquipment(slot, constants.EQUIPMENT_SUBSLOT_AMMO)
+            if ammo is None or ammo.cwrap <= 0:
+                continue
+            before = ammo.cwrap
+            reserve = audit.itemListContainer.countTotalWrapById(weapon.bulletType)
+            audit.reduceAmmoAfterShoot(slot, 1)
+            after = audit.getItemInEquipment(slot, constants.EQUIPMENT_SUBSLOT_AMMO)
+            assert (after.cwrap if after is not None else 0) == before - 1
+            audit.loadAmmo(slot, uuid.uuid4().hex)
+            after = audit.getItemInEquipment(slot, constants.EQUIPMENT_SUBSLOT_AMMO)
+            left = audit.itemListContainer.countTotalWrapById(weapon.bulletType)
+            assert after.cwrap + left == before + reserve - 1
+            log('Native ammunition audit slot=%r before=%r afterReload=%r reserve=%r conservation=OK' % (
+                slot, before, after.cwrap, left))
+        state['native_ammo_audited'] = True
     player.refreshCurrentAmmo()
     log('Local combat ready guns=%r' % [
         (weapon.slotId, weapon.bulletCnt, weapon.bulletMaxCnt, weapon.bulletInBag)
