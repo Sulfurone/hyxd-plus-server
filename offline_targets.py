@@ -22,7 +22,7 @@ def install(player, state, log):
             entity.maxHp = 10000
             entity.hp = 10000
             targets[entity_id]['native_health_initialized'] = True
-    if targets or state.get('target_spawn_pending'):
+    if len(targets) >= state.get('local_enemy_count', 1) or state.get('target_spawn_pending'):
         return
     state['target_spawn_pending'] = True
 
@@ -35,7 +35,7 @@ def install(player, state, log):
             origin = owner.position
             yaw = BigWorld.dcursor().yaw
             candidate = None
-            for distance, offset in ((8, 0), (6, 0.7), (6, -0.7), (5, 1.4), (5, -1.4)):
+            for distance, offset in ((22, 0.6), (20, -0.7), (18, 1.4), (18, -1.4), (8, 0)):
                 x = origin.x + math.sin(yaw + offset) * distance
                 z = origin.z + math.cos(yaw + offset) * distance
                 hit = BigWorld.collide(owner.spaceID, (x, origin.y + 2, z),
@@ -43,6 +43,10 @@ def install(player, state, log):
                 if hit is None or abs(hit[0].y - origin.y) > 1.5:
                     continue
                 position = Math.Vector3(x, hit[0].y + 0.02, z)
+                if any(sum((a-b)**2 for a,b in zip(position, entity.position)) < 25
+                       for entity in (BigWorld.entities.get(entity_id) for entity_id in targets)
+                       if entity is not None):
+                    continue
                 obstruction = BigWorld.collide(owner.spaceID,
                     (origin.x, origin.y + 1.3, origin.z),
                     (position.x, position.y + 1.3, position.z))

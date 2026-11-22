@@ -39,7 +39,8 @@ def set_status(owner, status, log):
 
 def start_drop(owner, state, log):
     types = owner.refreshAvatarStatus.im_func.func_globals['gametypes']
-    if owner.inParachuting() or owner.isOnPlane() or getattr(owner, 'climbCode', '') or state.get('drop_pending'):
+    if (owner.hp <= 0 or owner.isOnVehicle() or owner.inParachuting() or owner.isOnPlane()
+            or getattr(owner, 'climbCode', '') or state.get('drop_pending')):
         return
     position = owner.position
     hit = BigWorld.collide(owner.spaceID, (position.x, position.y + 2, position.z),

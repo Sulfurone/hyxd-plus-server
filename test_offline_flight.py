@@ -49,6 +49,7 @@ class FlightTests(unittest.TestCase):
         self.owner = Owner()
         self.owner.position = (1000, 0, 1000)
         self.owner.id, self.owner.spaceID = 77, 1
+        self.owner.hp = 10000
         self.owner.yaw, self.owner.avatarStatus = 0, 5
         self.owner.inWorld, self.owner.isDoingAction, self.owner.climbCode = True, False, ''
         self.owner.isOnPlane = lambda: self.owner.avatarStatus == 2
@@ -177,6 +178,11 @@ class FlightTests(unittest.TestCase):
         self.assertTrue(handler(self.owner, True, 120, 0))
         self.assertTrue(handler(self.owner, False, 120, 0))
         self.engine.createEntity.assert_called_once()
+
+    def test_dead_player_cannot_board_a_new_flight(self):
+        self.owner.hp = 0
+        self.assertFalse(self.state['start_transport_flight']())
+        self.engine.createEntity.assert_not_called()
 
 
 if __name__ == '__main__':

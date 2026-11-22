@@ -83,7 +83,7 @@ def install(player, state, log):
         owner = BigWorld.player()
         if owner is None or not owner.inWorld or state.get('local_flight') is not None:
             return False
-        if owner.inParachuting() or owner.isOnVehicle() or owner.isDoingAction or getattr(owner, 'climbCode', ''):
+        if owner.hp <= 0 or owner.inParachuting() or owner.isOnVehicle() or owner.isDoingAction or getattr(owner, 'climbCode', ''):
             return False
         origin = tuple(owner.position)
         yaw = BigWorld.dcursor().yaw

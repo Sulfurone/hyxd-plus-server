@@ -81,6 +81,10 @@ def install(player, state, log):
             if not gameglobal.isOffline:
                 return original(now, start, ends, slot)
             owner = BigWorld.player()
+            if state.get('battle_ray_audit'):
+                log('Native player audit ray start=%r ends=%r camera=%r direction=%r dcYaw=%r dcPitch=%r' % (
+                    start, ends, BigWorld.camera().position, BigWorld.camera().direction,
+                    BigWorld.dcursor().yaw, BigWorld.dcursor().pitch))
             inv = owner.clientEquipsAndInv
             result = inv.reduceAmmoAfterShoot(slot, 1)
             owner.refreshCurrentAmmo()
@@ -127,6 +131,7 @@ def install(player, state, log):
         log('Local bullet hit id=%r slot=%r part=%r damage=%r hp=%r->%r' % (
             entity_id, slot, part, damage, old_hp, target.hp))
         if target.hp == 0:
+            state['battle_kills'] = state.get('battle_kills', 0) + 1
             old_life = target.lifeCode
             target.lifeCode = constants.LIFECODE_DEAD
             target.set_lifeCode(old_life)

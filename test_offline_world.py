@@ -27,12 +27,13 @@ class NativeMethod:
 class WorldTests(unittest.TestCase):
     def setUp(self):
         self.pending = []
-        self.owner = SimpleNamespace(position=Vector(0, 0, 0), spaceID=1, inWorld=True,
+        self.owner = SimpleNamespace(position=Vector(0, 0, 0), spaceID=1, inWorld=True, hp=10000,
             avatarStatus=5, climbCode='', initParachuteParams=Mock(),
             physics=SimpleNamespace(teleport=Mock()))
         types = SimpleNamespace(AVATAR_STATUS_STARTPARACHUTING=3)
         self.owner.inParachuting = lambda: self.owner.avatarStatus in (3, 4)
         self.owner.isOnPlane = lambda: self.owner.avatarStatus == 2
+        self.owner.isOnVehicle = lambda: False
         self.refresh = Mock()
         self.owner.refreshAvatarStatus = NativeMethod({'gametypes': types}, self.refresh)
         self.bw = SimpleNamespace(player=lambda: self.owner,
@@ -67,6 +68,11 @@ class WorldTests(unittest.TestCase):
 
     def test_missing_ground_does_not_move_player(self):
         self.bw.collide.return_value = None
+        self.world.start_drop(self.owner, self.state, self.log)
+        self.owner.physics.teleport.assert_not_called()
+
+    def test_dead_player_cannot_bypass_respawn_by_starting_a_drop(self):
+        self.owner.hp = 0
         self.world.start_drop(self.owner, self.state, self.log)
         self.owner.physics.teleport.assert_not_called()
 

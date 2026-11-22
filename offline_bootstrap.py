@@ -216,6 +216,9 @@ def run():
         target_scope = {}
         execfile('I:/hyxd/hyp/_local_server/offline_targets.py', target_scope)
         target_scope['install'](player, STATE, log)
+        ai_scope = {}
+        execfile('I:/hyxd/hyp/_local_server/offline_ai.py', ai_scope)
+        ai_scope['install'](player, STATE, log)
         weapon = player.getActivedWeapon()
         if weapon and hasattr(weapon, 'waitRealThrow') and weapon.isThrow:
             log('Completing stalled local grenade throw')
