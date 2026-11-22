@@ -22,7 +22,7 @@ def install(player, state, log):
         state['damage_data_logged'] = True
 
     def item(item_id, count=1, slots=None):
-        return Item(uuid.uuid4().hex, item_id, count, slots or {})
+        return Item(int(uuid.uuid4().hex[:7], 16), item_id, count, slots or {})
 
     # Use the original inventory objects, so the reload animation's cue can
     # transfer real ammunition rather than updating a separate HUD counter.
@@ -100,7 +100,7 @@ def install(player, state, log):
             return original_reload(slotId)
         owner = BigWorld.player()
         slot = owner.getActiveWeaponSlotId() if slotId is None else slotId
-        result = owner.clientEquipsAndInv.loadAmmo(slot, uuid.uuid4().hex)
+        result = owner.clientEquipsAndInv.loadAmmo(slot, int(uuid.uuid4().hex[:7], 16))
         owner.onLoadAmmo(result, slot)
         log('Local reload completed slot=%r loaded=%r' % (slot, result))
         return result
@@ -175,7 +175,7 @@ def install(player, state, log):
             audit.reduceAmmoAfterShoot(slot, 1)
             after = audit.getItemInEquipment(slot, constants.EQUIPMENT_SUBSLOT_AMMO)
             assert (after.cwrap if after is not None else 0) == before - 1
-            audit.loadAmmo(slot, uuid.uuid4().hex)
+            audit.loadAmmo(slot, int(uuid.uuid4().hex[:7], 16))
             after = audit.getItemInEquipment(slot, constants.EQUIPMENT_SUBSLOT_AMMO)
             left = audit.itemListContainer.countTotalWrapById(weapon.bulletType)
             assert after.cwrap + left == before + reserve - 1

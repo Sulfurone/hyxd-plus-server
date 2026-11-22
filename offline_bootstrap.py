@@ -43,6 +43,12 @@ def retry(delay=1.0):
 
 
 def bind_model(player):
+    if player.inParachuting():
+        servo = STATE.get('pose_servo')
+        if servo is not None and servo in player.model.motors:
+            player.model.delMotor(servo)
+        player.model.position = player.position
+        return
     climbing = getattr(player, 'climbCode', '') or (player.physics is not None and player.physics.isClimbing)
     if climbing:
         servo = STATE.get('pose_servo')
@@ -140,7 +146,8 @@ def run():
         player.maxHp = 100
         player.hp = 100
         types = player._onLoaded.im_func.func_globals['gametypes']
-        if player.avatarStatus != types.AVATAR_STATUS_IN_COMBAT:
+        if (player.avatarStatus != types.AVATAR_STATUS_IN_COMBAT
+                and player.avatarStatus not in types.AVATAR_STATUS_PARACHUTINGS):
             player.avatarStatus = types.AVATAR_STATUS_IN_COMBAT
             player.refreshAvatarStatus(player.avatarStatus)
         if not STATE.get('positioned'):
@@ -170,6 +177,9 @@ def run():
         combat_scope = {}
         execfile('I:/hyxd/hyp/_local_server/offline_combat.py', combat_scope)
         combat_scope['install'](player, STATE, log)
+        world_scope = {}
+        execfile('I:/hyxd/hyp/_local_server/offline_world.py', world_scope)
+        world_scope['install'](player, STATE, log)
         target_scope = {}
         execfile('I:/hyxd/hyp/_local_server/offline_targets.py', target_scope)
         target_scope['install'](player, STATE, log)
