@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """Connect the installed client's lobby controls to local play."""
+import copy
 import traceback
 
 import BigWorld
 import GUI
+import Math
 import ResMgr
+import game
 import gameglobal
 
 
@@ -19,8 +22,112 @@ COMBAT_WIDGETS = ('latencyInfo', 'pressKeyF', 'equipmentInfo', 'tacticalBattle',
                   'parachuting')
 
 
-def show_background(state, log):
+def hide_character(state):
+    preview = state.pop('lobby_character', None)
+    if preview is None:
+        return
+    actor_id = preview.get('actor_id')
+    if actor_id is not None and BigWorld.entities.get(actor_id) is not None:
+        BigWorld.destroyEntity(actor_id)
+    if 'image' in preview:
+        GUI.delRoot(preview['image'])
+        preview['adaptor'].attachment = None
+
+
+def show_character(player, state, log):
+    if state.get('lobby_character') is not None:
+        return
+    preview = state['lobby_character'] = {}
+
+    def failed():
+        log('Local lobby character preview failed: %s' % traceback.format_exc())
+        hide_character(state)
+
+    try:
+        scene = game.lobbyScene.getManagerInstance().lobbyScene
+        constants = scene.addActor.im_func.func_globals['clientConst']
+        info = {'gbId': player.gbId, 'roleName': player.roleName or 'Local Player',
+                'physique': copy.deepcopy(player.physique),
+                'battleAspect': copy.deepcopy(player.battleAspect),
+                'lobbyType': constants.LOBBY_TYPE_MAIN, 'lobbyState': constants.LOBBY_STATE_IDLE}
+        position = player.position + Math.Vector3(12, 4, 0)
+        preview['actor_id'] = BigWorld.createEntity('AvatarLobbyActor', player.spaceID, 0,
+                                                    position, Math.Vector3(0, 0, 0), info)
+    except Exception:
+        failed()
+        return
+
+    def refresh():
+        if state.get('lobby_character') is not preview:
+            return
+        try:
+            resolution = tuple(GUI.screenResolution())
+            if resolution != preview.get('resolution'):
+                width, height = resolution
+                preview['image'].size = (1.65 * height / width, 1.65)
+                preview['resolution'] = resolution
+            preview['adaptor'].takePhoto(1, 0, False, False, '', 0, 1, 0, 1)
+            BigWorld.callback(1.0 / 24, refresh)
+        except Exception:
+            failed()
+
+    def finish_model(attempts=50):
+        if state.get('lobby_character') is not preview:
+            return
+        try:
+            actor = BigWorld.entities.get(preview['actor_id'])
+            if actor is None or not actor.firstModelFinish:
+                if not attempts:
+                    raise RuntimeError('Lobby character model load timed out')
+                BigWorld.callback(0.1, lambda: finish_model(attempts - 1))
+                return
+            # The native lobby actor initializes the skeleton, actions and
+            # materials. Keep its model only, in a separate portrait renderer.
+            model = actor.model
+            BigWorld.destroyEntity(preview['actor_id'])
+            del preview['actor_id']
+            model.position = (0, 0, 0)
+            model.yaw = 0
+            model.scale = (1, 1, 1)
+            model.visible = True
+
+            adaptor = GUI.MeshAdaptor('gui/photoGen/defaultMask.tga', 0)
+            adaptor.setSize(768)
+            adaptor.setLightDir(1, 0, 5)
+            adaptor.setLights(0xffffff, 0xfffff3)
+            adaptor.setLightHDR(2, 3)
+            adaptor.modelAlpha = True
+            adaptor.mixTextureAlpha = False
+            adaptor.photoFov = 0.3
+            adaptor.nearPlane = 2.0
+            adaptor.farPlane = 50.0
+            transform = Math.Matrix()
+            transform.lookAt((0, 0.9, 7), (0, 0, -1), (0, 1, 0))
+            adaptor.transform = transform
+            adaptor.attachment = model
+            try:
+                model.action('special_idle_relax')(0, None, 0)
+            except (ValueError, EnvironmentError):
+                pass
+
+            image = GUI.Simple('')
+            image.position = (0, -0.07, 0.4)
+            image.materialFX = 'BLEND'
+            image.texture = adaptor.texture
+            GUI.addRoot(image)
+            preview.update(image=image, adaptor=adaptor)
+            refresh()
+            log('Local lobby character displayed')
+        except Exception:
+            failed()
+
+    BigWorld.callback(0.1, finish_model)
+
+
+def show_background(player, state, log):
     if state.get('lobby_background') is not None or not ResMgr.fileExist(BACKGROUND_TEXTURE):
+        if state.get('lobby_background_visible'):
+            show_character(player, state, log)
         return
     background = GUI.Simple(BACKGROUND_TEXTURE)
     background.position = (0, 0, 0.5)
@@ -46,6 +153,7 @@ def show_background(state, log):
         state['lobby_background_visible'] = True
         BigWorld.worldDrawEnabled(False)
         log('Local lobby background displayed')
+        show_character(player, state, log)
 
     display()
 
@@ -86,6 +194,7 @@ def install(player, state, log):
 
     def leave_scene():
         state['lobby_active'] = False
+        hide_character(state)
         hide_background(state)
         close_proxies(('gameSetting',) + LOBBY_WIDGETS)
         player.ap.changeCursor()
@@ -124,7 +233,7 @@ def install(player, state, log):
             for name in LOBBY_WIDGETS:
                 getattr(ui, name).show()
             player.ap.restore(False)
-            show_background(state, log)
+            show_background(player, state, log)
             state['lobby_visited'] = True
             log('Local lobby ready space=%r' % player.spaceID)
             return True
@@ -272,5 +381,5 @@ def install(player, state, log):
         match.refreshInfo()
         navigation(ui.navigationButton)
         close_proxies(COMBAT_WIDGETS)
-        show_background(state, log)
+        show_background(player, state, log)
     return show
