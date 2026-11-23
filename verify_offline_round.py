@@ -124,13 +124,16 @@ def run(state, log):
         assert state['start_local_round'](transport=False, total=1)
         state['ai_enabled'] = False
         current = state['local_round']
-        current['stage_started'] = time.time() - 70
+        stage = current['circles'][0]
+        current['stage_started'] = time.time() - stage[2] - stage[3] / 2.0
         state['tick_local_round'](False)
         proxy = gameglobal.rds.ui.gasStatusBar
         result['circle'] = (proxy.bCircleStartR, proxy.wCircleR, proxy.isShrinking)
-        assert result['circle'] == (600, 350, True)
-        # Move the diagnostic circle, keeping the actual player and camera put.
-        current['center'] = (owner.position.x + 1000, owner.position.z)
+        assert result['circle'] == (stage[0], stage[1], True)
+        # Force damage with a diagnostic circle while keeping the player put.
+        center = (owner.position.x + 1000, owner.position.z)
+        current['circles'][0] = (100, 50) + stage[2:5] + (center, center)
+        current['zone_event'] = None
         current['last_damage'] = 0
         owner.hp = 50
         owner.power = 10000

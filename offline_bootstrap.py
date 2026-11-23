@@ -127,9 +127,7 @@ def run():
         gameglobal.isOffline = True
         BigWorld.enableOfflineFocus(False)
         player = BigWorld.player()
-        if player is not None and STATE.get('ready') and STATE.get('lobby_active'):
-            install_lobby(player)
-            return
+        in_lobby = STATE.get('lobby_active', False)
         if player is None:
             manager = game.lobbyScene.getManagerInstance()
             if manager.lobbyScene is not None:
@@ -212,12 +210,13 @@ def run():
                 }
             }
         gameglobal.rds.ui.loginView.hide()
-        gameglobal.rds.ui.littleMap.show()
-        lm = gameglobal.rds.ui.littleMap
-        if lm.widget is not None and getattr(lm, 'playerIcon', None) is None:
-            lm.loadTeamIcon()
-            lm.refreshIcons()
-        gameglobal.rds.ui.playerChat.show()
+        if not in_lobby:
+            gameglobal.rds.ui.littleMap.show()
+            lm = gameglobal.rds.ui.littleMap
+            if lm.widget is not None and getattr(lm, 'playerIcon', None) is None:
+                lm.loadTeamIcon()
+                lm.refreshIcons()
+            gameglobal.rds.ui.playerChat.show()
         STATE['ready'] = True
         stage('Offline map and player ready')
         log('Native transform motors=%r' % [name for name in dir(BigWorld) if any(word in name.lower() for word in ('servo', 'motor', 'tracker', 'yaw', 'filter', 'matrix'))])
@@ -231,9 +230,10 @@ def run():
         world_scope = {}
         execfile('I:/hyxd/hyp/_local_server/offline_world.py', world_scope)
         world_scope['install'](player, STATE, log)
-        target_scope = {}
-        execfile('I:/hyxd/hyp/_local_server/offline_targets.py', target_scope)
-        target_scope['install'](player, STATE, log)
+        if not in_lobby:
+            target_scope = {}
+            execfile('I:/hyxd/hyp/_local_server/offline_targets.py', target_scope)
+            target_scope['install'](player, STATE, log)
         ai_scope = {}
         execfile('I:/hyxd/hyp/_local_server/offline_ai.py', ai_scope)
         ai_scope['install'](player, STATE, log)
@@ -283,6 +283,9 @@ def monitor_movement():
                 and player is not None and player.model is not None):
             native_model_yaw = player.model.yaw
             bind_model(player)
+            update_view = STATE.get('update_wingsuit_view')
+            if update_view is not None:
+                update_view(player)
             facing = (BigWorld.dcursor().yaw, player.yaw, player.model.yaw)
             if time.time() - _last_facing_time > 0.5 and (not _last_facing or abs(facing[0] - _last_facing[0]) > 0.15):
                 log('Facing cameraYaw=%r playerYaw=%r modelYaw=%r nativeModelYaw=%r pitch=%r roll=%r' % (facing[0], facing[1], facing[2], native_model_yaw, player.pitch, player.roll))

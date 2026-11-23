@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Connect the installed client's lobby controls to local play."""
 import traceback
 
@@ -11,7 +12,8 @@ COMBAT_WIDGETS = ('latencyInfo', 'pressKeyF', 'equipmentInfo', 'tacticalBattle',
                   'littleMap', 'teamFrame', 'teamIndicator', 'aliveInfo', 'beHitHelp',
                   'soundDetection', 'hotkeyBlackHud', 'hotkeyWhiteHud', 'weaponInfo',
                   'weaponSlot', 'boardBar', 'playerChat', 'shootWarning', 'killInfoMsg',
-                  'combatMsgList', 'inventory', 'gasStatusBar', 'matchResult')
+                  'combatMsgList', 'inventory', 'gasStatusBar', 'matchResult',
+                  'parachuting')
 
 
 def override(proxy, name, local, active):
@@ -122,11 +124,23 @@ def install(player, state, log):
             proxy.widget.startMatchBtn.visible = True
             proxy.widget.cancelMatchBtn.visible = False
             proxy.refreshMatchModeBtn()
-            proxy.widget.matchMode.enabled = False
-            proxy.widget.matchMode.canMergeMc.visible = False
+
+    def refresh_mode(proxy):
+        if proxy.widget is None:
+            return
+        mode = proxy.widget.matchMode
+        selected = '自由练习' if state.get('lobby_practice') else '单人对局'
+        mode.labels = ['本地模式', selected]
+        mode.enabled = True
+        mode.canMergeMc.visible = False
+
+    def change_mode(proxy, event=None):
+        state['lobby_practice'] = not state.get('lobby_practice', False)
+        proxy.refreshMatchModeBtn()
 
     def match_click(proxy, event=None):
-        BigWorld.callback(0, start)
+        transport = not state.get('lobby_practice', False)
+        BigWorld.callback(0, lambda: start(transport))
 
     def lobby_tabs(proxy):
         if proxy.widget is None:
@@ -165,7 +179,8 @@ def install(player, state, log):
             controls.showCardBtn.visible = False
 
     match = ui.matchLobby
-    match_constants = match.refreshMatchModeBtn.im_func.func_globals['const']
+    native_mode = getattr(type(match), '_hypLobbyOriginal_refreshMatchModeBtn', type(match).refreshMatchModeBtn)
+    match_constants = native_mode.im_func.func_globals['const']
     player_class = type(player)
     for name, value in (('getGameMatchMode', solo_mode), ('isSinglePlayer', is_solo), ('isHeader', is_solo)):
         if not hasattr(player_class, name):
@@ -174,8 +189,9 @@ def install(player, state, log):
         if not hasattr(player, name):
             setattr(player, name, value)
     override(match, 'refreshInfo', match_ready, in_lobby)
+    override(match, 'refreshMatchModeBtn', refresh_mode, in_lobby)
     override(match, '_onStartMatchBtnClick', match_click, in_lobby)
-    override(match, '_onMatchModeClick', lambda proxy, event: None, in_lobby)
+    override(match, '_onMatchModeClick', change_mode, in_lobby)
     override(ui.lobbyButton, 'refreshUI', lobby_tabs, in_lobby)
     override(ui.lobbyButton, '_onLobbyBtnClick', lambda proxy, event=None: None, in_lobby)
     override(ui.navigationButton, 'initUI', navigation, in_lobby)
@@ -210,4 +226,8 @@ def install(player, state, log):
     state['lobby_key_handler'] = handle_key
     state['show_local_lobby'] = show
     state['start_from_local_lobby'] = start
+    if in_lobby():
+        match.refreshInfo()
+        navigation(ui.navigationButton)
+        close_proxies(COMBAT_WIDGETS)
     return show

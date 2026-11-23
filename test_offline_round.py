@@ -1,6 +1,8 @@
 """Verify round limits, safe-zone damage, results and restart isolation."""
 import importlib.util
+import math
 from pathlib import Path
+import random
 import sys
 from types import SimpleNamespace
 import unittest
@@ -98,22 +100,40 @@ class RoundTests(unittest.TestCase):
             self.assertNotIn('failed', call.args[0])
 
     def test_shrink_interpolation_and_horizontal_distance(self):
-        stage = self.bridge.STAGES[0]
+        stage = (600, 350, 50, 40, 100, (0, 0), (80, -10))
         self.assertEqual(self.bridge.circle_at(stage, 0), 600)
         self.assertEqual(self.bridge.circle_at(stage, 70), 475)
         self.assertEqual(self.bridge.circle_at(stage, 1000), 350)
+        self.assertEqual(self.bridge.center_at(stage, 70), (40, -5))
         self.assertFalse(self.bridge.outside((0, 600, 0), (0, 0), 10))
         self.assertTrue(self.bridge.outside((11, 0, 0), (0, 0), 10))
 
     def test_native_circle_uses_game_clock_and_shrink_argument_order(self):
+        self.state['loot_spatial_grid'] = {(0, 0): [(1, {'position': (500, 25, -800)})]}
         current = self.start()
+        outer = math.hypot(4000, 4000)
         self.tick()
-        self.player.syncSafeAreaInfo.assert_called_once_with((0, 0), 600, (0, 0), 350, 1050, 1)
-        self.now += 70
+        self.player.syncSafeAreaInfo.assert_called_once_with((0, 0), outer, (500, -800), 2560, 1160, 1)
+        self.now += 205
         self.tick()
         self.player.syncSafeAreaShrinkInfo.assert_called_once_with(
-            (0, 0), 600, (0, 0), 350, 6.25, 1050, 1090, 1)
-        self.assertEqual(current['radius'], 475)
+            (0, 0), outer, (500, -800), 2560, (outer - 2560) / 90, 1160, 1250, 1)
+        self.assertAlmostEqual(current['radius'], (outer + 2560) / 2)
+        self.assertEqual(current['center'], (250, -400))
+
+    def test_circles_use_map_bounds_and_stay_inside_preceding_circle(self):
+        land = {(0, 0): [(1, {'position': (1230, 20, 900)}),
+                         (2, {'position': (7600, 20, 3900)})]}
+        stages = self.bridge.plan_circles((-2000, 3500, 6000, 4000), land, random.Random(1))
+        self.assertEqual(stages[0][5], (1000, 1500))
+        self.assertEqual(stages[0][6], (1230, 900))
+        self.assertEqual(stages[0][1], 1280)
+        self.assertEqual(stages[0][0], math.hypot(3000, 2000))
+        for outer, inner, _, _, _, center, next_center in stages:
+            shift = math.hypot(center[0] - next_center[0], center[1] - next_center[1])
+            self.assertLessEqual(shift + inner, outer)
+        for previous, following in zip(stages, stages[1:]):
+            self.assertEqual((previous[1], previous[6]), (following[0], following[5]))
 
     def test_last_elimination_wins_exactly_once(self):
         current = self.start(total=2)
@@ -130,7 +150,7 @@ class RoundTests(unittest.TestCase):
 
     def test_zone_kills_player_and_does_not_schedule_respawn(self):
         current = self.start()
-        self.player.position.x = 700
+        self.player.position.x = 6000
         self.player.hp = 50
         self.now += 1
         self.tick()
@@ -142,7 +162,7 @@ class RoundTests(unittest.TestCase):
 
     def test_death_at_last_enemy_does_not_become_victory(self):
         current = self.start(total=1)
-        self.player.position.x = 700
+        self.player.position.x = 6000
         self.player.hp = 50
         enemy = SimpleNamespace(position=self.player.position, hp=50, set_hp=Mock())
         self.engine.entities[10] = enemy
@@ -165,18 +185,29 @@ class RoundTests(unittest.TestCase):
         self.assertEqual(self.state['local_targets'], {})
         self.assertNotIn('player_respawn_at', self.state)
 
-    def test_transport_waits_for_landing_before_circle(self):
+    def test_transport_shows_circle_before_landing_and_keeps_its_schedule(self):
+        self.state['start_transport_flight'].side_effect = lambda: self.state.update(
+            local_flight={'phase': 'loading', 'route': {'duration': 200}}) or True
         self.assertTrue(self.state['start_local_round']())
         current = self.state['local_round']
-        self.state['local_flight'] = {'phase': 'onboard'}
+        self.tick()
+        self.player.syncSafeAreaInfo.assert_not_called()
+        self.state['local_flight']['phase'] = 'onboard'
         self.now += 100
+        self.player.position.x = 6000
         self.tick()
         self.assertEqual(current['phase'], 'deploying')
-        self.player.syncSafeAreaInfo.assert_not_called()
+        self.assertEqual(self.player.hp, 10000)
+        self.player.syncSafeAreaInfo.assert_called_once()
+        self.assertEqual(self.player.syncSafeAreaInfo.call_args.args[-2], 1270)
+        center = current['center']
         del self.state['local_flight']
+        self.player.position.x = 1800
         self.tick()
         self.assertEqual(current['phase'], 'active')
-        self.assertEqual(current['stage_started'], self.now)
+        self.assertEqual(current['stage_started'], 1000)
+        self.assertEqual(current['center'], center)
+        self.player.syncSafeAreaInfo.assert_called_once()
 
     def test_late_enemy_death_from_old_round_is_ignored(self):
         current = self.start()
@@ -194,7 +225,7 @@ class RoundTests(unittest.TestCase):
 
     def test_damage_backlog_is_capped_after_window_pause(self):
         self.start()
-        self.player.position.x = 700
+        self.player.position.x = 6000
         self.now += 50
         self.tick()
         self.assertEqual(self.player.hp, 9900)
@@ -223,14 +254,15 @@ class RoundTests(unittest.TestCase):
         self.ui.matchResult.exp.assert_called_once_with(0)
 
     def test_each_stage_reaches_its_next_radius_and_final_circle_closes(self):
-        for stage in self.bridge.STAGES:
-            self.assertEqual(self.bridge.circle_at(stage, stage[2] + stage[3]), stage[1])
         current = self.start()
-        current['stage'] = 4
-        self.now += 41
+        stages = current['circles']
+        for stage in stages:
+            self.assertEqual(self.bridge.circle_at(stage, stage[2] + stage[3]), stage[1])
+            self.assertEqual(self.bridge.center_at(stage, stage[2] + stage[3]), stage[6])
+        self.now += sum(stage[2] + stage[3] for stage in stages) + 1
         self.tick()
         self.assertEqual(current['radius'], 0)
-        self.assertEqual(self.player.syncSafeAreaShrinkInfo.call_args.args[-1], 5)
+        self.assertEqual(self.player.syncSafeAreaShrinkInfo.call_args.args[-1], len(stages))
 
     def test_airborne_restart_does_not_replace_current_round_or_inventory(self):
         current = self.start()

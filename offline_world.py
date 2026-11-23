@@ -62,10 +62,32 @@ def start_drop(owner, state, log):
             return
         state['drop_pending'] = False
         owner.initParachuteParams()
-        state['local_drop_started'] = time.time()
         set_status(owner, types.AVATAR_STATUS_STARTPARACHUTING, log)
 
     BigWorld.callback(0.1, begin)
+
+
+def update_wingsuit_view(owner, state, flying):
+    camera = gameglobal.rds.cam
+    target = state.get('wingsuit_camera')
+    if not flying:
+        if target is not None:
+            state.pop('wingsuit_camera')
+            if camera.cc.target is target:
+                camera.resetCamera()
+        return
+    yaw = BigWorld.dcursor().yaw
+    transform = state.get('render_transform')
+    if transform is not None:
+        transform.setRotateY(yaw)
+        transform.translation = owner.position
+    owner.model.yaw = yaw
+    # A live position provider follows physics at render time. Freeze its
+    # rotation so camera orbit only uses the direction cursor, not body yaw.
+    if target is None:
+        target = state['wingsuit_camera'] = BigWorld.PlayerMatrixFixRotate()
+    if camera.cc.target is not target:
+        camera.cc.target = target
 
 
 def install_parachute(player, state, log):
@@ -91,6 +113,53 @@ def install_parachute(player, state, log):
             set_status(owner, status, log)
 
         setattr(commands, name, change)
+
+    cls = type(player)
+    ground_original = getattr(cls, '_hypOriginalAirGroundDistance', player.getDistanceFromGround.im_func)
+    cls._hypOriginalAirGroundDistance = ground_original
+
+    def ground_distance(owner, checkWater=False, position=None):
+        if not gameglobal.isOffline or not owner.inParachuting() or position is not None:
+            return ground_original(owner, checkWater, position)
+        # An old rendered body can still be on the ground as the real player
+        # exits the aircraft or is teleported for practice.
+        return ground_original(owner, checkWater, owner.position)
+
+    cls.getDistanceFromGround = ground_distance
+    original_speed = getattr(cls, '_hypOriginalFallingSpeed', player.refreshFallingSpeed.im_func)
+    cls._hypOriginalFallingSpeed = original_speed
+
+    def falling_speed(owner):
+        if not gameglobal.isOffline or owner.avatarStatus != types.AVATAR_STATUS_STARTPARACHUTING:
+            return original_speed(owner)
+        dc = BigWorld.dcursor()
+        steering = not owner.ap.needShowCursor()
+        if steering:
+            dc.canRotate = True
+        now = owner.getServerTime()
+        previous = owner.lastPosInfo[1]
+        elapsed = max(0.0, min(0.1, now - previous))
+        turn = owner.ap.rightwardMagnitude - owner.ap.leftwardMagnitude
+        forward = owner.ap.forwardMagnitude - owner.ap.backwardMagnitude if steering else 0.0
+        if turn and steering:
+            dc.yaw += turn * elapsed * 1.25
+        # setVelocity's horizontal axes are relative to the direction cursor
+        # while modelDirected is false, just as in ground movement.
+        dive = max(0.0, min(1.0, -dc.pitch / 1.5))
+        horizontal = max(12.0, 24.0 + 12.0 * forward - 8.0 * dive)
+        vertical = -(23.0 + 30.0 * dive)
+        owner.physics.modelDirected = False
+        owner.physics.setVelocity(0, vertical, horizontal, 2, None)
+        owner.physics.maxVelocity = horizontal
+        owner.physics.maxTopVelocity = (0, vertical, horizontal)
+        owner.lastPosInfo = (owner.position, now)
+
+    cls.refreshFallingSpeed = falling_speed
+
+    def update_view(owner):
+        update_wingsuit_view(owner, state, owner.avatarStatus == types.AVATAR_STATUS_STARTPARACHUTING)
+
+    state['update_wingsuit_view'] = update_view
 
     original = getattr(type(player), '_hypOriginalWorldHandleKeyEvent',
                        player.handleKeyEvent.im_func)
@@ -610,7 +679,7 @@ def install_vehicles(player, state, log):
     vehicles = state.setdefault('local_vehicles', {})
     actual = [entity for entity in BigWorld.entities.values() if type(entity).__name__ == 'Vehicle']
     log('Vehicle fleet audit tracked=%r actual=%r loaded=%r fps=%r' % (
-        len(vehicles), len(actual), sum(entity.isVehicleLoadComplete() for entity in actual),
+        len(vehicles), len(actual), sum(bool(entity.isVehicleLoadComplete()) for entity in actual),
         BigWorld.getFps()))
     # Keep pending entities registered: asynchronous load is not destruction.
     for entity in actual:

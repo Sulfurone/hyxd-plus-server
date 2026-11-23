@@ -76,6 +76,34 @@ class WorldTests(unittest.TestCase):
         self.world.start_drop(self.owner, self.state, self.log)
         self.owner.physics.teleport.assert_not_called()
 
+    def test_wingsuit_uses_one_live_camera_target_until_parachute_opens(self):
+        class Camera:
+            target = None
+            changes = 0
+
+            def __setattr__(self, name, value):
+                if name == 'target':
+                    self.changes += 1
+                super().__setattr__(name, value)
+
+        cc = Camera()
+        camera = self.world.gameglobal.rds.cam = SimpleNamespace(cc=cc, resetCamera=Mock())
+        target = object()
+        self.bw.PlayerMatrixFixRotate = Mock(return_value=target)
+        cursor = SimpleNamespace(yaw=0.0)
+        self.bw.dcursor = lambda: cursor
+        self.owner.model = SimpleNamespace(yaw=0)
+        self.world.update_wingsuit_view(self.owner, self.state, True)
+        self.assertIs(cc.target, target)
+        cursor.yaw = 1.57
+        self.world.update_wingsuit_view(self.owner, self.state, True)
+        self.bw.PlayerMatrixFixRotate.assert_called_once_with()
+        self.assertEqual(cc.changes, 1)
+        self.assertEqual(self.owner.model.yaw, 1.57)
+        self.world.update_wingsuit_view(self.owner, self.state, False)
+        camera.resetCamera.assert_called_once_with()
+        self.assertNotIn('wingsuit_camera', self.state)
+
     def prepare_loot(self):
         class Item:
             def __init__(self, uid, item_id, count, slots):

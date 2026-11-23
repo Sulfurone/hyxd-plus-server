@@ -118,18 +118,6 @@ def install(player, state, log):
         flight['jumped_at'] = time.time()
         status(owner, types.AVATAR_STATUS_STARTPARACHUTING)
         owner.boardingPlaneId = 0
-        # Body replacement after leaving the aircraft is asynchronous. Reset
-        # the camera once its new camera node exists, rather than retaining
-        # the old ground-body node until the parachute opens.
-        def reset_freefall_camera():
-            if owner.avatarStatus == types.AVATAR_STATUS_STARTPARACHUTING:
-                gameglobal.rds.cam.resetCamera()
-                camera_target = Math.Matrix()
-                camera_target.setRotateY(0)
-                camera_target.translation = owner.position
-                flight['freefall_camera'] = camera_target
-                gameglobal.rds.cam.cc.target = camera_target
-        BigWorld.callback(0.3, reset_freefall_camera)
         log('Transport exit plane=%r position=%r' % (flight['plane_id'], owner.position))
         return True
 
@@ -242,13 +230,6 @@ def install(player, state, log):
                     elif flight['phase'] == 'parachuting':
                         if owner.avatarStatus in types.AVATAR_STATUS_PATACHUTE_OPEN_SET:
                             flight['parachute_opened'] = True
-                        if owner.avatarStatus == types.AVATAR_STATUS_STARTPARACHUTING:
-                            camera_target = flight.get('freefall_camera')
-                            if camera_target is not None:
-                                camera_target.translation = owner.position
-                                gameglobal.rds.cam.cc.target = camera_target
-                        elif flight.pop('freefall_camera', None) is not None:
-                            gameglobal.rds.cam.resetCamera()
                         if not flight.get('camera_checked') and time.time() - flight['jumped_at'] > 2:
                             flight['camera_checked'] = True
                             camera_error = math.sqrt(sum((a-b)**2 for a,b in zip(owner.position, BigWorld.camera().position)))

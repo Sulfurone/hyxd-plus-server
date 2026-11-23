@@ -77,19 +77,17 @@ class FlightTests(unittest.TestCase):
             return 42
 
         self.camera = SimpleNamespace(position=(1000, 600, 1000))
-        self.cam = SimpleNamespace(resetCamera=Mock(), cc=SimpleNamespace(target=None))
         self.clientcom = SimpleNamespace(getPlaneEntity=Mock(return_value=None))
         ui = SimpleNamespace(littleMap=SimpleNamespace(refreshAirline=NativeMethod(
             Mock(), {'clientcom': self.clientcom})))
-        self.player_matrix = object()
         self.engine = SimpleNamespace(player=lambda: self.owner, entities=self.entities,
             createEntity=Mock(side_effect=create), destroyEntity=lambda eid: self.entities.pop(eid, None),
             dcursor=lambda: SimpleNamespace(yaw=0), camera=lambda: self.camera,
             callback=lambda delay, callback: self.pending.append((delay, callback)),
-            PlayerMatrix=lambda: self.player_matrix, Servo=lambda matrix: SimpleNamespace(target=matrix))
+            Servo=lambda matrix: SimpleNamespace(target=matrix))
         patcher = patch.dict(sys.modules, {'BigWorld': self.engine,
             'Math': SimpleNamespace(Matrix=Matrix, Vector3=lambda *xyz: xyz),
-            'gameglobal': SimpleNamespace(isOffline=True, rds=SimpleNamespace(cam=self.cam, ui=ui))})
+            'gameglobal': SimpleNamespace(isOffline=True, rds=SimpleNamespace(ui=ui))})
         patcher.start()
         self.addCleanup(patcher.stop)
         spec = importlib.util.spec_from_file_location('_flight_test', Path(__file__).with_name('offline_flight.py'))
@@ -189,13 +187,6 @@ class FlightTests(unittest.TestCase):
         self.assertAlmostEqual(route['source'][2], 640)
         self.assertAlmostEqual(route['destination'][0], 860)
         self.assertAlmostEqual(route['destination'][2], 960)
-
-    def test_camera_switches_to_current_player_after_body_replacement(self):
-        self.depart()
-        reset = next(callback for delay, callback in self.pending if delay == 0.3)
-        reset()
-        self.assertIs(self.cam.cc.target, self.state['local_flight']['freefall_camera'])
-        self.assertEqual(self.cam.cc.target.translation, self.owner.position)
 
     def test_failed_native_follow_aborts_and_restores_ground_position(self):
         self.board()

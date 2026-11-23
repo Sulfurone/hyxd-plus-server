@@ -1,5 +1,7 @@
 """Finite local solo rounds, native safe zone and original result screen."""
 import copy
+import math
+import random
 import time
 import traceback
 import uuid
@@ -8,16 +10,44 @@ import BigWorld
 import gameglobal
 
 
-# Waiting and shrinking times are seconds. HP uses the client's 1/100 scale.
-STAGES = ((600, 350, 50, 40, 100), (350, 180, 40, 35, 200),
-          (180, 80, 30, 30, 400), (80, 20, 20, 25, 700),
-          (20, 0, 10, 30, 1200))
+# Radius as a fraction of the map's shorter side, wait, shrink time and damage.
+ZONE_PHASES = ((0.32, 160, 90, 100), (0.20, 75, 70, 200),
+               (0.11, 55, 55, 300), (0.055, 40, 45, 450),
+               (0.023, 30, 35, 650), (0.007, 20, 25, 900), (0, 10, 30, 1200))
 
 
 def circle_at(stage, elapsed):
-    outer, inner, wait, shrink, damage = stage
+    outer, inner, wait, shrink = stage[:4]
     fraction = max(0.0, min(1.0, (elapsed - wait) / float(shrink)))
     return outer + (inner - outer) * fraction
+
+
+def plan_circles(rect, loot_grid, rng):
+    left, top, width, depth = rect
+    center = (left + width / 2.0, top - depth / 2.0)
+    outer = math.hypot(width, depth) / 2.0
+    scale = min(width, depth)
+    # Use actual settlement coordinates to keep the final zones on land.
+    land = [(row['position'][0], row['position'][2])
+            for _, rows in sorted(loot_grid.items()) for _, row in rows]
+    stages = []
+    for fraction, wait, shrink, damage in ZONE_PHASES:
+        inner = fraction * scale
+        # Limit center travel so reaching the smaller circle stays practical.
+        shift = min((outer - inner) * 0.55, scale * 0.17)
+        candidates = [point for point in land
+                      if (point[0] - center[0]) ** 2 + (point[1] - center[1]) ** 2 <= shift ** 2
+                      and left + inner * 0.65 <= point[0] <= left + width - inner * 0.65
+                      and top - depth + inner * 0.65 <= point[1] <= top - inner * 0.65]
+        target = rng.choice(candidates) if candidates and inner else center
+        stages.append((outer, inner, wait, shrink, damage, center, target))
+        outer, center = inner, target
+    return stages
+
+
+def center_at(stage, elapsed):
+    fraction = max(0.0, min(1.0, (elapsed - stage[2]) / float(stage[3])))
+    return tuple(a + (b - a) * fraction for a, b in zip(stage[5], stage[6]))
 
 
 def outside(position, center, radius):
@@ -30,6 +60,30 @@ def install(player, state, log):
     native = player.clientEquipsAndInv.loadAmmo.im_func.func_globals
     constants, Item = native['combatconst'], native['Item']
     clock = player.syncSafeAreaInfo.im_func.func_globals['utils'].getTrueNow
+
+    def new_circles():
+        return plan_circles(state.get('battle_map_rect', (-4000, 4000, 8000, 8000)),
+                            state.get('loot_spatial_grid', {}), random)
+
+    def sync_zone(current, stage, elapsed):
+        event = (current['stage'], elapsed >= stage[2])
+        if current['zone_event'] == event:
+            return
+        center, next_center = stage[5:7]
+        if event[1]:
+            began = clock() - (elapsed - stage[2])
+            player.syncSafeAreaShrinkInfo(center, stage[0], next_center, stage[1],
+                (stage[0] - stage[1]) / float(stage[3]), began, began + stage[3], event[0] + 1)
+        else:
+            player.syncSafeAreaInfo(center, stage[0], next_center, stage[1],
+                clock() + stage[2] - elapsed, event[0] + 1)
+        current['zone_event'] = event
+        log('Local round circle stage=%r shrinking=%r radius=%r next=%r center=%r nextCenter=%r' % (
+            event[0] + 1, event[1], circle_at(stage, elapsed), stage[1], center, next_center))
+
+    previous_round = state.get('local_round')
+    if previous_round and previous_round['phase'] in ('deploying', 'active') and 'circles' not in previous_round:
+        previous_round.update(circles=new_circles(), stage=0, stage_started=time.time(), zone_event=None)
     # The offline PlayerAvatar omits lobby-only properties used by the shared
     # match result widget. Supply its local account fields without network RPCs.
     if not hasattr(player, 'lv'):
@@ -189,7 +243,7 @@ def install(player, state, log):
                    'total': max(1, int(total)), 'spawned': 0, 'eliminated': 0,
                    'kills': 0, 'damage': 0, 'game_started': clock(),
                    'started': time.time(), 'stage': 0, 'stage_started': time.time(),
-                   'center': (player.position.x, player.position.z), 'zone_event': None,
+                   'circles': new_circles(), 'zone_event': None,
                    'last_damage': time.time(), 'last_population': None}
         state['local_round'] = current
         state['ai_enabled'] = True
@@ -198,6 +252,12 @@ def install(player, state, log):
         if transport and not state['start_transport_flight']():
             current['phase'] = 'active'
             log('Local round transport unavailable; starting at ground checkpoint')
+        flight = state.get('local_flight')
+        if flight is not None:
+            first = current['circles'][0]
+            # Give the last possible drop time enough runway to parachute and travel.
+            wait = max(first[2], int(flight.get('route', {}).get('duration', 0) * 0.9 + 90))
+            current['circles'][0] = first[:2] + (wait,) + first[3:]
         log('Local round started id=%r total=%r phase=%r' % (
             current['id'], current['total'] + 1, current['phase']))
         return True
@@ -217,38 +277,30 @@ def install(player, state, log):
             if current and current['phase'] in ('deploying', 'active'):
                 if player.hp <= 0 or player.isDead():
                     finish(False, 'death')
-                elif current['phase'] == 'deploying':
-                    if not state.get('local_flight') and not player.inParachuting() and not player.isOnPlane():
-                        current.update(phase='active', stage_started=now,
-                            center=(player.position.x, player.position.z))
-                        state['battle_checkpoint'] = tuple(player.position)
-                        log('Local round landed id=%r center=%r' % (current['id'], current['center']))
                 else:
+                    if current['phase'] == 'deploying' and not state.get('local_flight') and not player.inParachuting() and not player.isOnPlane():
+                        current['phase'] = 'active'
+                        state['battle_checkpoint'] = tuple(player.position)
+                        log('Local round landed id=%r position=%r' % (current['id'], tuple(player.position)))
                     stage_index = current['stage']
-                    stage = STAGES[stage_index]
+                    circles = current['circles']
+                    stage = circles[stage_index]
                     elapsed = now - current['stage_started']
-                    if elapsed >= stage[2] + stage[3] and stage_index + 1 < len(STAGES):
+                    while elapsed >= stage[2] + stage[3] and stage_index + 1 < len(circles):
                         current['stage'] += 1
                         current['stage_started'] += stage[2] + stage[3]
                         stage_index = current['stage']
-                        stage = STAGES[stage_index]
+                        stage = circles[stage_index]
                         elapsed = now - current['stage_started']
                     radius = circle_at(stage, elapsed)
-                    current['radius'] = radius
-                    event = (stage_index, elapsed >= stage[2])
-                    if current['zone_event'] != event:
-                        current['zone_event'] = event
-                        center = current['center']
-                        if event[1]:
-                            began = clock() - (elapsed - stage[2])
-                            player.syncSafeAreaShrinkInfo(center, stage[0], center, stage[1],
-                                (stage[0] - stage[1]) / float(stage[3]), began,
-                                began + stage[3], stage_index + 1)
-                        else:
-                            player.syncSafeAreaInfo(center, stage[0], center, stage[1],
-                                clock() + stage[2] - elapsed, stage_index + 1)
-                        log('Local round circle stage=%r shrinking=%r radius=%r center=%r' % (
-                            stage_index + 1, event[1], radius, current['center']))
+                    current.update(radius=radius, center=center_at(stage, elapsed), next_center=stage[6])
+                    # Boarding resets native gas visuals. Wait until the aircraft
+                    # is ready so the briefing ring is visible throughout flight.
+                    flight = state.get('local_flight')
+                    if not flight or flight.get('phase') != 'loading':
+                        sync_zone(current, stage, elapsed)
+                    if current['phase'] == 'deploying':
+                        return
                     # Elapsed ticks are capped so a paused client never receives a
                     # lethal backlog of damage when the window resumes.
                     if now - current['last_damage'] >= 1:
@@ -281,8 +333,9 @@ def install(player, state, log):
             if time.time() - state.get('round_last_error', 0) > 5:
                 state['round_last_error'] = time.time()
                 log('Local round update failed: %s' % traceback.format_exc())
-        if schedule:
-            BigWorld.callback(0.25, update)
+        finally:
+            if schedule:
+                BigWorld.callback(0.25, update)
 
     state['tick_local_round'] = update
     previous_key = player.handleKeyEvent.im_func
