@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Connect the installed client's lobby controls to local play."""
 import copy
+import math
 import traceback
 
 import BigWorld
@@ -66,6 +67,10 @@ def show_character(player, state, log):
                 width, height = resolution
                 preview['image'].size = (1.65 * height / width, 1.65)
                 preview['resolution'] = resolution
+            reviewing = state.get('lobby_character_page', False)
+            if reviewing != preview.get('reviewing'):
+                preview['image'].position = (0.38 if reviewing else 0, -0.07, 0.4)
+                preview['reviewing'] = reviewing
             preview['adaptor'].takePhoto(1, 0, False, False, '', 0, 1, 0, 1)
             BigWorld.callback(1.0 / 24, refresh)
         except Exception:
@@ -111,7 +116,6 @@ def show_character(player, state, log):
                 pass
 
             image = GUI.Simple('')
-            image.position = (0, -0.07, 0.4)
             image.materialFX = 'BLEND'
             image.texture = adaptor.texture
             GUI.addRoot(image)
@@ -181,9 +185,15 @@ def override(proxy, name, local, active):
 
 def install(player, state, log):
     ui = gameglobal.rds.ui
+    character_bg = ui.characterBg
+    detail = ui.characterDetail
+    character_tabs = character_bg._getTabList.im_func.func_globals['uiConst']
 
     def in_lobby():
         return state.get('lobby_active', False)
+
+    def in_character_page():
+        return in_lobby() and state.get('lobby_character_page', False)
 
     def close_proxies(names):
         # Avoid loading a proxy solely to close it.
@@ -193,6 +203,8 @@ def install(player, state, log):
                 proxy.hide()
 
     def leave_scene():
+        close_proxies(('characterBg',))
+        state.pop('lobby_character_page', None)
         state['lobby_active'] = False
         hide_character(state)
         hide_background(state)
@@ -296,11 +308,92 @@ def install(player, state, log):
     def lobby_tabs(proxy):
         if proxy.widget is None:
             return
-        proxy.widget.lobbyBtn.selected = True
-        for name in ('characterBtn', 'rankBtn', 'marketBtn', 'boxBtn'):
+        reviewing = in_character_page()
+        proxy.widget.lobbyBtn.selected = not reviewing
+        proxy.widget.characterBtn.visible = True
+        proxy.widget.characterBtn.selected = reviewing
+        for name in ('rankBtn', 'marketBtn', 'boxBtn'):
             btn = getattr(proxy.widget, name, None)
             if btn is not None:
                 btn.visible = False
+
+    def close_character_page(proxy, event=None):
+        if in_character_page():
+            character_bg.hide()
+            state.pop('lobby_character_page', None)
+            ui.matchLobby.show()
+        lobby_tabs(proxy)
+
+    def open_character_page(proxy, event=None):
+        if in_character_page():
+            return
+        state['lobby_character_page'] = True
+        try:
+            ui.matchLobby.hide()
+            character_bg.show(character_tabs.TAB_CHARACTERINFO_IDX)
+            lobby_tabs(proxy)
+            log('Local lobby character page opened')
+        except Exception:
+            log('Local lobby character page failed: %s' % traceback.format_exc())
+            close_character_page(proxy)
+
+    def hide_remote_tabs(proxy):
+        for tab in (character_tabs.TAB_APPEARANCE_IDX, character_tabs.TAB_WAREHOUSE_IDX,
+                    character_tabs.TAB_CHIP_IDX):
+            proxy.setTabVisible(tab, False, False)
+        proxy.relayoutTab()
+
+    def init_character_bg(proxy):
+        proxy.initTabUI()
+        hide_remote_tabs(proxy)
+        proxy._link2SubView()
+
+    def profile_subtabs(proxy):
+        proxy.selectSubTab(info_constants['TAB_DETAILINFO_IDX'])
+        proxy.widget.allDetailTabBtn.visible = False
+        proxy.widget.careerTabBtn.visible = False
+
+    def init_profile(proxy, widget):
+        proxy.widget = widget
+        widget.visible = True
+        profile = widget.infoPanel
+        summary = profile.summaryMc
+        summary.roleNameTf.text = player.roleName or '本地角色'
+        summary.mottoTf.text = '本次启动的本地战绩'
+        summary.levelTf.text = str(player.lv)
+        summary.editBtn.visible = False
+        summary.lvInfoBar.visible = False
+        stats = state.get('local_profile_stats', {})
+        played, wins = stats.get('played', 0), stats.get('wins', 0)
+        kills, deaths = stats.get('kills', 0), stats.get('deaths', 0)
+        profile.winMc.winCntTf.text = str(wins)
+        profile.winMc.matchCntTf.text = str(played)
+        profile.winMc.winRateTf.text = '%.2f %%' % (100.0 * wins / max(1, played))
+        profile.killMc.killCntTf.text = str(kills)
+        profile.killMc.killRateTf.text = '%.2f' % (float(kills) / max(1, deaths))
+        for name in ('achieveShowMc', 'rankMc', 'bestWeaponMc', 'bestToolMc', 'achievementMc', 'medalMc'):
+            control = getattr(profile, name, None)
+            if control is not None:
+                control.visible = False
+
+        hit = widget.modelHit
+        hit.visible = True
+        previous_x = [None]
+
+        def rotate(*args):
+            native = appearance_native['ASObject'](args[3][0])
+            if not native.buttonDown:
+                previous_x[0] = None
+                return
+            x = native.stageX
+            preview = state.get('lobby_character', {})
+            adaptor = preview.get('adaptor')
+            if previous_x[0] is not None and adaptor is not None:
+                model = adaptor.attachment
+                model.yaw -= math.pi * (x - previous_x[0]) / max(hit.width, 1)
+            previous_x[0] = x
+
+        hit.addEventListener(appearance_native['events'].MOUSE_MOVE, rotate, False, 0, True)
 
     def navigation(proxy):
         if proxy.widget is None:
@@ -344,7 +437,18 @@ def install(player, state, log):
     override(match, '_onStartMatchBtnClick', match_click, in_lobby)
     override(match, '_onMatchModeClick', change_mode, in_lobby)
     override(ui.lobbyButton, 'refreshUI', lobby_tabs, in_lobby)
-    override(ui.lobbyButton, '_onLobbyBtnClick', lambda proxy, event=None: None, in_lobby)
+    override(ui.lobbyButton, '_onLobbyBtnClick', close_character_page, in_lobby)
+    override(ui.lobbyButton, '_onCharacterBtnClick', open_character_page, in_lobby)
+    info = ui.characterInfoPanel
+    info_constants = getattr(type(info), '_hypLobbyOriginal_initSubTab', type(info).initSubTab).im_func.func_globals
+    appearance = ui.appearancePanel
+    appearance_native = appearance.onHandleMouseMove.im_func.func_globals
+    override(character_bg, 'initUI', init_character_bg, in_character_page)
+    override(character_bg, 'updateAllRedPot', lambda proxy: None, in_character_page)
+    override(info, 'initSubTab', profile_subtabs, in_character_page)
+    override(info, 'queryPersonalStats', lambda proxy: None, in_character_page)
+    override(info, 'refreshRedPoint', lambda proxy: None, in_character_page)
+    override(detail, 'initPanel', init_profile, in_character_page)
     override(ui.navigationButton, 'initUI', navigation, in_lobby)
     override(result, 'initUI', result_init, has_local_result)
     override(result, '_onGoBackBtnClick', return_from_result, has_local_result)
@@ -379,6 +483,7 @@ def install(player, state, log):
     state['start_from_local_lobby'] = start
     if in_lobby():
         match.refreshInfo()
+        lobby_tabs(ui.lobbyButton)
         navigation(ui.navigationButton)
         close_proxies(COMBAT_WIDGETS)
         show_background(player, state, log)

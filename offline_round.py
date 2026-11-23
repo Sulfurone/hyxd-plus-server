@@ -142,6 +142,11 @@ def install(player, state, log):
         if not current or current['phase'] not in ('deploying', 'active'):
             return False
         current.update(phase='finished', won=bool(won), reason=reason, ended=time.time())
+        stats = state.setdefault('local_profile_stats', {'played': 0, 'wins': 0, 'kills': 0, 'deaths': 0})
+        stats['played'] += 1
+        stats['wins'] += int(won)
+        stats['kills'] += current['kills']
+        stats['deaths'] += int(player.isDead())
         state['ai_enabled'] = False
         state.pop('player_respawn_at', None)
         remaining = population()
