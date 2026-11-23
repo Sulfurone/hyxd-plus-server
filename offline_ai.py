@@ -250,6 +250,9 @@ def install(player, state, log):
     def update():
         if state.get('ai_generation') != generation:
             return
+        if state.get('lobby_active'):
+            BigWorld.callback(0.5, update)
+            return
         try:
             owner = BigWorld.player()
             now = time.time()

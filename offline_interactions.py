@@ -175,7 +175,7 @@ def install(player, state, log):
             if state.get('interaction_generation') != generation:
                 return
             current_player = BigWorld.player()
-            if current_player is not None and current_player.inWorld:
+            if not state.get('lobby_active') and current_player is not None and current_player.inWorld:
                 chunk = manager.isNearByChunk.im_func.func_globals['utils'].getChunkId(current_player.position)
                 if last_chunk[0] != chunk:
                     last_chunk[0] = chunk

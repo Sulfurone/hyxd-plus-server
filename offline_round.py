@@ -207,6 +207,10 @@ def install(player, state, log):
     def update(schedule=True):
         if state.get('round_generation') != generation:
             return
+        if state.get('lobby_active'):
+            if schedule:
+                BigWorld.callback(0.5, update)
+            return
         try:
             current = state.get('local_round')
             now = time.time()

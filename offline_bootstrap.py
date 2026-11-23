@@ -44,6 +44,12 @@ def retry(delay=1.0):
     BigWorld.callback(delay, run)
 
 
+def install_lobby(player):
+    scope = {}
+    execfile('I:/hyxd/hyp/_local_server/offline_lobby.py', scope)
+    return scope['install'](player, STATE, log)
+
+
 def bind_model(player):
     on_vehicle = player.isOnVehicle()
     on_plane = player.isOnPlane()
@@ -112,6 +118,9 @@ def run():
         gameglobal.isOffline = True
         BigWorld.enableOfflineFocus(False)
         player = BigWorld.player()
+        if player is not None and STATE.get('ready') and STATE.get('lobby_active'):
+            install_lobby(player)
+            return
         if player is None:
             manager = game.lobbyScene.getManagerInstance()
             if manager.lobbyScene is not None:
@@ -222,6 +231,9 @@ def run():
         round_scope = {}
         execfile('I:/hyxd/hyp/_local_server/offline_round.py', round_scope)
         round_scope['install'](player, STATE, log)
+        show_lobby = install_lobby(player)
+        if not STATE.get('lobby_visited'):
+            show_lobby()
         weapon = player.getActivedWeapon()
         if weapon and hasattr(weapon, 'waitRealThrow') and weapon.isThrow:
             log('Completing stalled local grenade throw')
@@ -248,7 +260,8 @@ def monitor_movement():
         return
     try:
         player = BigWorld.player()
-        if STATE.get('ready') and player is not None and player.model is not None:
+        if (STATE.get('ready') and not STATE.get('lobby_active')
+                and player is not None and player.model is not None):
             native_model_yaw = player.model.yaw
             bind_model(player)
             facing = (BigWorld.dcursor().yaw, player.yaw, player.model.yaw)
@@ -268,7 +281,7 @@ def monitor_movement():
                 _last_move_log_time = time.time()
     except Exception:
         log(traceback.format_exc())
-    BigWorld.callback(0.0, monitor_movement)
+    BigWorld.callback(0.5 if STATE.get('lobby_active') else 0.0, monitor_movement)
 
 
 def watch_source(previous=os.stat(SOURCE).st_mtime):

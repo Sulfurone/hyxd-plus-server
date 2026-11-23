@@ -465,7 +465,7 @@ def install_loot(player, state, log):
             return
         try:
             owner = BigWorld.player()
-            if (owner is not None and owner.inWorld and owner.hp > 0
+            if (not state.get('lobby_active') and owner is not None and owner.inWorld and owner.hp > 0
                     and not owner.isDead() and hasattr(owner, 'power') and owner.power > 0):
                 old_power = owner.power
                 heal = 200 if old_power >= 6000 else 100
@@ -527,6 +527,9 @@ def install_loot(player, state, log):
 
     def update():
         if state.get('world_generation') != generation:
+            return
+        if state.get('lobby_active'):
+            BigWorld.callback(1, update)
             return
         try:
             owner = BigWorld.player()
@@ -879,6 +882,9 @@ def install_vehicles(player, state, log):
 
     def update_vehicle_markers():
         if state.get('vehicle_generation') != generation:
+            return
+        if state.get('lobby_active'):
+            BigWorld.callback(1, update_vehicle_markers)
             return
         try:
             owner = BigWorld.player()
