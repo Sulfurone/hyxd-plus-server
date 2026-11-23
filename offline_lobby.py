@@ -3,9 +3,12 @@
 import traceback
 
 import BigWorld
+import GUI
+import ResMgr
 import gameglobal
 
 
+BACKGROUND_TEXTURE = '../res/offline-lobby-background.dds'
 LOBBY_WIDGETS = ('lobbyButton', 'matchLobby', 'navigationButton')
 COMBAT_WIDGETS = ('latencyInfo', 'pressKeyF', 'equipmentInfo', 'tacticalBattle',
                   'playerPose', 'aimCross', 'playerBlood', 'holdBreath', 'compass',
@@ -14,6 +17,44 @@ COMBAT_WIDGETS = ('latencyInfo', 'pressKeyF', 'equipmentInfo', 'tacticalBattle',
                   'weaponSlot', 'boardBar', 'playerChat', 'shootWarning', 'killInfoMsg',
                   'combatMsgList', 'inventory', 'gasStatusBar', 'matchResult',
                   'parachuting')
+
+
+def show_background(state, log):
+    if state.get('lobby_background') is not None or not ResMgr.fileExist(BACKGROUND_TEXTURE):
+        return
+    background = GUI.Simple(BACKGROUND_TEXTURE)
+    background.position = (0, 0, 0.5)
+    background.size = (2, 2)
+    background.materialFX = 'SOLID'
+    # Exclude the window caption and the pointer at the edge of the capture.
+    top, right = 23.0 / 1040.0, 0.985
+    background.mapping = ((0.0, top), (0.0, 1.0), (right, 1.0), (right, top))
+    state['lobby_background'] = background
+
+    def display(attempts=20):
+        if state.get('lobby_background') is not background:
+            return
+        if background.texture.getWidth() < 16:
+            if attempts:
+                BigWorld.callback(0.1, lambda: display(attempts - 1))
+            else:
+                state.pop('lobby_background', None)
+                log('Local lobby background texture could not load')
+            return
+        GUI.enable(True)
+        GUI.addRoot(background)
+        state['lobby_background_visible'] = True
+        BigWorld.worldDrawEnabled(False)
+        log('Local lobby background displayed')
+
+    display()
+
+
+def hide_background(state):
+    background = state.pop('lobby_background', None)
+    if state.pop('lobby_background_visible', False):
+        GUI.delRoot(background)
+        BigWorld.worldDrawEnabled(True)
 
 
 def override(proxy, name, local, active):
@@ -45,6 +86,7 @@ def install(player, state, log):
 
     def leave_scene():
         state['lobby_active'] = False
+        hide_background(state)
         close_proxies(('gameSetting',) + LOBBY_WIDGETS)
         player.ap.changeCursor()
         ui.initHud()
@@ -72,8 +114,7 @@ def install(player, state, log):
             return True
         state['lobby_active'] = True
         try:
-            # Keep the battle space and camera mounted. Alternating it with the
-            # separate interface space drops terrain meshes on this client.
+            # Keep the battle space mounted while presenting its separate menu.
             player.ap.resetControl()
             state['ai_enabled'] = False
             state.pop('player_respawn_at', None)
@@ -83,8 +124,9 @@ def install(player, state, log):
             for name in LOBBY_WIDGETS:
                 getattr(ui, name).show()
             player.ap.restore(False)
+            show_background(state, log)
             state['lobby_visited'] = True
-            log('Local lobby ready; kept battle camera and terrain in space=%r' % player.spaceID)
+            log('Local lobby ready space=%r' % player.spaceID)
             return True
         except Exception:
             log('Local lobby show failed: %s' % traceback.format_exc())
@@ -230,4 +272,5 @@ def install(player, state, log):
         match.refreshInfo()
         navigation(ui.navigationButton)
         close_proxies(COMBAT_WIDGETS)
+        show_background(state, log)
     return show

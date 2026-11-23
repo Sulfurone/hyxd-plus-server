@@ -154,7 +154,7 @@ def run():
         BigWorld.darkWorld(False)
         enable_battle_terrain()
         BigWorld.setFloraEnable(True)
-        BigWorld.worldDrawEnabled(True)
+        BigWorld.worldDrawEnabled(not STATE.get('lobby_background_visible', False))
         sources = getattr(player.model, 'sources', ()) if player.model else ()
         if not sources or sources == ('effect/dummy/effectdummy.model',):
             if time.time() - STATE.get('body_retry_at', 0) > 10:
