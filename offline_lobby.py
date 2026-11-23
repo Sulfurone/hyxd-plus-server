@@ -1,14 +1,11 @@
-"""Connect the installed client's lobby scene and controls to local play."""
-import copy
+"""Connect the installed client's lobby controls to local play."""
 import traceback
 
 import BigWorld
-import Math
-import game
 import gameglobal
 
 
-LOBBY_WIDGETS = ('lobbyButton', 'matchLobby', 'navigationButton', 'lobbyMemberInfo')
+LOBBY_WIDGETS = ('lobbyButton', 'matchLobby', 'navigationButton')
 COMBAT_WIDGETS = ('latencyInfo', 'pressKeyF', 'equipmentInfo', 'tacticalBattle',
                   'playerPose', 'aimCross', 'playerBlood', 'holdBreath', 'compass',
                   'littleMap', 'teamFrame', 'teamIndicator', 'aliveInfo', 'beHitHelp',
@@ -33,8 +30,6 @@ def override(proxy, name, local, active):
 
 def install(player, state, log):
     ui = gameglobal.rds.ui
-    manager = game.lobbyScene.getManagerInstance()
-    gameglobal.rds.lsManager = manager
 
     def in_lobby():
         return state.get('lobby_active', False)
@@ -47,19 +42,7 @@ def install(player, state, log):
                 proxy.hide()
 
     def leave_scene():
-        BigWorld.camera(state['lobby_combat_camera'])
-        BigWorld.cameraSpaceID(player.spaceID)
-        BigWorld.camera().spaceID = player.spaceID
-        if 'lobby_combat_fov' in state:
-            BigWorld.projection().fov = state.pop('lobby_combat_fov')
-        BigWorld.floraLodCameraCentered(False)
-        BigWorld.enableCharLod(True)
         state['lobby_active'] = False
-        state.pop('lobby_combat_camera', None)
-        player.needDummyPos = False
-        BigWorld.darkWorld(False)
-        BigWorld.worldDrawEnabled(True)
-        gameglobal.rds.cam.resetCamera()
         close_proxies(('gameSetting',) + LOBBY_WIDGETS)
         player.ap.changeCursor()
         ui.initHud()
@@ -67,7 +50,7 @@ def install(player, state, log):
     def show(exit_vehicle=True):
         if in_lobby():
             return True
-        if (not player.inWorld or player.isOnPlane()
+        if (not player.inWorld or not player.isOnLoaded or player.isOnPlane()
                 or player.inParachuting() or state.get('local_flight')
                 or state.get('drop_pending') or getattr(player, 'climbCode', '')):
             return False
@@ -85,46 +68,21 @@ def install(player, state, log):
 
             BigWorld.callback(0.5, after_exit)
             return True
-        state['lobby_combat_camera'] = BigWorld.camera()
-        state['lobby_combat_fov'] = BigWorld.projection().fov
         state['lobby_active'] = True
         try:
+            # Keep the battle space and camera mounted. Alternating it with the
+            # separate interface space drops terrain meshes on this client.
             player.ap.resetControl()
             state['ai_enabled'] = False
             state.pop('player_respawn_at', None)
             ui.gasStatusBar.reset()
             close_proxies(COMBAT_WIDGETS)
             ui.loginView.hide()
-            if manager.lobbyScene is None or manager.camera is None:
-                manager.initData()
-            manager.loadSpace(False)
-            info = {'roleName': player.roleName or 'Local Player', 'physique': copy.deepcopy(player.physique),
-                    'battleAspect': copy.deepcopy(player.battleAspect)}
-            actor = manager.getSceneActorByGbId(player.gbId)
-            if actor is None:
-                manager.addPlayer(player.gbId, info)
-                actor = manager.getSceneActorByGbId(player.gbId)
-                if actor is None:
-                    raise RuntimeError('Native lobby actor was not created')
-            manager.playerId = actor.id
-            manager.isInit = False
-            manager.initCamera()
-            manager.camera.spaceID = manager.lobbyScene.spaceId
-            eye = actor.position + Math.Vector3(-0.9, 1.35, 4.6)
-            focus = actor.position + Math.Vector3(0, 1.0, 0)
-            direction = focus - eye
-            direction.normalise()
-            manager.lobbyScene.setCameraParams(manager.camera, eye, direction, 0.72)
-            manager.lobbyScene.showLoginSkyBox()
-            BigWorld.darkWorld(False)
-            BigWorld.worldDrawEnabled(True)
             for name in LOBBY_WIDGETS:
                 getattr(ui, name).show()
             player.ap.restore(False)
             state['lobby_visited'] = True
-            log('Local lobby ready space=%r actor=%r position=%r camera=%r cameraSpace=%r' % (
-                manager.lobbyScene.spaceId, actor.id, actor.position,
-                BigWorld.camera().position, BigWorld.camera().spaceID))
+            log('Local lobby ready; kept battle camera and terrain in space=%r' % player.spaceID)
             return True
         except Exception:
             log('Local lobby show failed: %s' % traceback.format_exc())
@@ -188,11 +146,6 @@ def install(player, state, log):
             if btn is not None:
                 btn.visible = False
 
-    def member_refresh(proxy):
-        if proxy.widget is not None:
-            proxy.refreshMemberInfo(player.gbId, {'roleName': player.roleName or 'Local Player',
-                'isShow': True, 'isHeader': True, 'isReady': False, 'isInDuel': False})
-
     def return_from_result(proxy, event=None):
         BigWorld.callback(0, show)
 
@@ -226,7 +179,6 @@ def install(player, state, log):
     override(ui.lobbyButton, 'refreshUI', lobby_tabs, in_lobby)
     override(ui.lobbyButton, '_onLobbyBtnClick', lambda proxy, event=None: None, in_lobby)
     override(ui.navigationButton, 'initUI', navigation, in_lobby)
-    override(ui.lobbyMemberInfo, 'refreshInfo', member_refresh, in_lobby)
     override(result, 'initUI', result_init, has_local_result)
     override(result, '_onGoBackBtnClick', return_from_result, has_local_result)
     override(player.ap, 'uiNeedShowCursor', lambda controller: True, in_lobby)

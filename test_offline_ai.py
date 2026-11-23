@@ -76,7 +76,8 @@ class AITests(unittest.TestCase):
         self.scope = dict(BigWorld=self.engine, gameglobal=self.globals,
             Math=SimpleNamespace(Vector3=Vector), state=self.state,
             constants=SimpleNamespace(EQUIPMENT_SLOT_ID_HEAD=51, EQUIPMENT_SLOT_ID_VEST=52, LIFECODE_DEAD=3),
-            original_hit=CallableNative(), original_begin=Mock(), original_awareness=Mock(), log=Mock(),
+            original_hit=CallableNative(), original_begin=Mock(), original_awareness=Mock(),
+            original_hurt=Mock(), log=Mock(),
             math=math, time=time, traceback=traceback, generation=1)
         exec(compile(ast.Module(body=functions, type_ignores=[]), 'ai_adapter', 'exec'), self.scope)
 
@@ -149,6 +150,18 @@ class AITests(unittest.TestCase):
         self.scope['update']()
         self.robot.onClientAIFireTimerRobot.assert_called_once()
         self.scope['log'].assert_not_called()
+
+    def test_rapid_hits_play_one_reaction_and_pause_robot_aim(self):
+        react = self.scope['play_hit_reaction']
+        react(self.robot, 5, (), self.owner.id)
+        react(self.robot, 5, (), self.owner.id)
+        self.scope['original_hurt'].assert_called_once_with(self.robot, 5, (), self.owner.id)
+        self.scope['update']()
+        self.robot.onClientAIFireTimerRobot.assert_not_called()
+        self.assertEqual(self.robot.fireTarget, 0)
+        self.state['local_targets'][42]['hit_reaction_until'] = 0
+        react(self.robot, 5, (), self.owner.id)
+        self.assertEqual(self.scope['original_hurt'].call_count, 2)
 
     def test_pause_stops_firing_and_damage(self):
         self.state['ai_enabled'] = False

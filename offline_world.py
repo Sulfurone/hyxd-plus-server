@@ -955,6 +955,10 @@ def install(player, state, log):
     install_parachute(player, state, log)
     install_loot(player, state, log)
     install_vehicles(player, state, log)
+    lm = gameglobal.rds.ui.littleMap
+    rect = getattr(lm, 'mapRect', None)
+    if rect and len(rect) == 4 and rect[2] > 0 and rect[3] > 0:
+        state['battle_map_rect'] = tuple(rect)
     flight_scope = {}
     execfile('I:/hyxd/hyp/_local_server/offline_flight.py', flight_scope)
     flight_scope['install'](player, state, log)
@@ -972,7 +976,6 @@ def install(player, state, log):
         if name.startswith('AVATAR_STATUS_') and ('PARA' in name or 'COMBAT' in name)})
     log('Original inventory callbacks=%r' % [name for name in dir(player)
         if any(word in name.lower() for word in ('invupdated', 'equipupdated', 'equipchange', 'invchange', 'ownitem', 'invand', 'equipand'))])
-    lm = gameglobal.rds.ui.littleMap
     log('LittleMap diag widget=%r canShow=%r spaceNo=%r teamEntIds=%r teamInfo=%r playerIcon=%r mapRect=%r' % (
         lm.widget, lm.canShow(), getattr(player, 'spaceNo', None),
         getattr(player, 'teamEntIds', None), getattr(player, 'teamInfo', None),

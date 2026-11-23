@@ -8,9 +8,41 @@ import Math
 import gameglobal
 
 
+DEFAULT_MAP_RECT = (-4000, 4000, 8000, 8000)
+TRANSPORT_SPEED = 60.0
+
+
 def route_at(route, elapsed):
     fraction = max(0.0, min(1.0, elapsed / route['duration']))
     return tuple(a + (b - a) * fraction for a, b in zip(route['source'], route['destination']))
+
+
+def map_route(rect, yaw, height):
+    left, top, width, depth = rect
+    x, z = left + width / 2.0, top - depth / 2.0
+    dx, dz = math.sin(yaw), math.cos(yaw)
+    # Both ends are just inside the boundary so boarding and automatic exit
+    # take place in the mapped area.
+    inset = min(160.0, width * 0.1, depth * 0.1)
+    half_span = min(half / abs(direction) for half, direction in
+                    ((width / 2.0 - inset, dx), (depth / 2.0 - inset, dz))
+                    if abs(direction) > 1e-8)
+    return {'source': (x - dx * half_span, height, z - dz * half_span),
+            'destination': (x + dx * half_span, height, z + dz * half_span),
+            'duration': 2.0 * half_span / TRANSPORT_SPEED}
+
+
+class PlaneMapPosition(object):
+    def __init__(self, plane, transform):
+        self.plane = plane
+        self.transform = transform
+
+    @property
+    def position(self):
+        return self.transform.translation
+
+    def __getattr__(self, name):
+        return getattr(self.plane, name)
 
 
 def install(player, state, log):
@@ -21,6 +53,23 @@ def install(player, state, log):
     probe_id = state.pop('flight_probe_entity', None)
     if probe_id is not None and BigWorld.entities.get(probe_id) is not None:
         BigWorld.destroyEntity(probe_id)
+
+    ui = getattr(gameglobal.rds, 'ui', None)
+    if ui is not None:
+        clientcom = ui.littleMap.refreshAirline.im_func.func_globals['clientcom']
+        original_get_plane = getattr(clientcom, '_hypOriginalGetPlaneEntity', clientcom.getPlaneEntity)
+        clientcom._hypOriginalGetPlaneEntity = original_get_plane
+
+        def get_plane():
+            if gameglobal.isOffline:
+                flight = state.get('local_flight') or state.get('departing_transport')
+                if flight is not None and flight.get('plane_id') is not None:
+                    view = flight.get('map_position')
+                    if view is not None:
+                        return view
+            return original_get_plane()
+
+        clientcom.getPlaneEntity = get_plane
 
     def status(owner, value):
         old = owner.avatarStatus
@@ -34,6 +83,13 @@ def install(player, state, log):
         if plane_id is not None and BigWorld.entities.get(plane_id) is not None:
             BigWorld.destroyEntity(plane_id)
         flight['plane_id'] = None
+
+    def move_plane(flight, elapsed):
+        point = route_at(flight['route'], elapsed)
+        flight['matrix'].translation = Math.Vector3(*point)
+        if flight['phase'] != 'onboard' and elapsed >= flight['route']['duration']:
+            log('Transport reached opposite map edge at %r' % (point,))
+            release_plane(flight)
 
     def abort(flight, reason):
         owner = BigWorld.player()
@@ -87,24 +143,12 @@ def install(player, state, log):
             return False
         origin = tuple(owner.position)
         yaw = BigWorld.dcursor().yaw
-        direction = (math.sin(yaw), math.cos(yaw))
         height = origin[1] + 600
-        source = (origin[0], height, origin[2])
-        grid = state.get('loot_spatial_grid', {})
-        if grid:
-            min_x, max_x = min(cell[0] for cell in grid) * 128 + 128, max(cell[0] for cell in grid) * 128
-            min_z, max_z = min(cell[1] for cell in grid) * 128 + 128, max(cell[1] for cell in grid) * 128
-            target_x = max(min_x, min(max_x, source[0] + direction[0] * 3600))
-            target_z = max(min_z, min(max_z, source[2] + direction[1] * 3600))
-        else:
-            target_x, target_z = source[0] + direction[0] * 3600, source[2] + direction[1] * 3600
-        destination = (target_x, height, target_z)
-        distance = math.sqrt((target_x - source[0])**2 + (target_z - source[2])**2)
-        if distance < 600:
-            destination = (0, height, 0)
-            distance = math.sqrt(source[0]**2 + source[2]**2)
-        yaw = math.atan2(destination[0] - source[0], destination[2] - source[2])
-        route = {'source': source, 'destination': destination, 'duration': max(10, distance / 60.0)}
+        route = map_route(state.get('battle_map_rect', DEFAULT_MAP_RECT), yaw, height)
+        source, destination = route['source'], route['destination']
+        previous = state.pop('departing_transport', None)
+        if previous is not None:
+            release_plane(previous)
         flight = {'phase': 'loading', 'route': route, 'yaw': yaw,
                   'return_position': origin, 'audit': audit, 'requested': time.time()}
         state['local_flight'] = flight
@@ -127,6 +171,11 @@ def install(player, state, log):
             return
         flight = state.get('local_flight')
         try:
+            departing = state.get('departing_transport')
+            if departing is not None:
+                move_plane(departing, time.time() - departing['started'])
+                if departing['plane_id'] is None:
+                    state.pop('departing_transport', None)
             if flight is not None:
                 owner = BigWorld.player()
                 plane_id = flight.get('plane_id')
@@ -143,6 +192,10 @@ def install(player, state, log):
                         servo = BigWorld.Servo(transform)
                         plane.model.addMotor(servo)
                         flight['matrix'], flight['servo'] = transform, servo
+                        # The Servo moves the model, while the entity's network
+                        # position remains at the first waypoint. Feed both
+                        # original map widgets the same position as the model.
+                        flight['map_position'] = PlaneMapPosition(plane, transform)
                         owner.initParachuteParams()
                         duration = flight['route']['duration']
                         points = [route_at(flight['route'], seconds) for seconds in (0, 3, duration * 0.9, duration)]
@@ -153,6 +206,11 @@ def install(player, state, log):
                             owner.model.delMotor(pose)
                         status(owner, types.AVATAR_STATUS_ONBOARD)
                         owner.onPlaneBoarding(plane.id)
+                        if ui is not None:
+                            try:
+                                plane.setPlanePath()
+                            except Exception:
+                                log('Transport map display failed: %s' % traceback.format_exc())
                         # Feed both native following motors the same trajectory.
                         # Plane entities lack a server transform stream locally.
                         owner.physics.followTarget = transform
@@ -168,7 +226,7 @@ def install(player, state, log):
                 else:
                     elapsed = time.time() - flight['started']
                     if plane is not None:
-                        flight['matrix'].translation = Math.Vector3(*route_at(flight['route'], elapsed))
+                        move_plane(flight, elapsed)
                     if flight['phase'] == 'onboard':
                         if elapsed > 2 and not flight.get('motion_checked'):
                             expected = route_at(flight['route'], elapsed)
@@ -196,12 +254,10 @@ def install(player, state, log):
                             camera_error = math.sqrt(sum((a-b)**2 for a,b in zip(owner.position, BigWorld.camera().position)))
                             flight['camera_error'] = camera_error
                             log('Transport freefall camera distance=%.2f' % camera_error)
-                        if plane is not None and time.time() - flight['jumped_at'] > 8:
-                            release_plane(flight)
                         if not owner.inParachuting():
                             log('Transport landed position=%r audit=%r' % (owner.position, flight['audit']))
-                            release_plane(flight)
                             if flight['audit']:
+                                release_plane(flight)
                                 state['transport_audit_result'] = {
                                     'landed': True, 'plane_removed': flight['plane_id'] is None,
                                     'motion_error': flight.get('motion_error'),
@@ -209,12 +265,14 @@ def install(player, state, log):
                                     'parachute_opened': flight.get('parachute_opened', False)}
                                 log('Transport selfcheck result=%r' % state['transport_audit_result'])
                                 owner.physics.teleport(Math.Vector3(*flight['return_position']))
+                            elif flight['plane_id'] is not None:
+                                state['departing_transport'] = flight
                             state.pop('local_flight', None)
         except Exception:
             log('Transport update failed: %s' % traceback.format_exc())
             if flight is not None:
                 abort(flight, 'update error')
-        BigWorld.callback(0.0 if state.get('local_flight') else 0.5, update)
+        BigWorld.callback(0.0 if state.get('local_flight') or state.get('departing_transport') else 0.5, update)
 
     previous_key = player.handleKeyEvent.im_func
     keys = player.setVehiclePhysics.im_func.func_globals['keys']

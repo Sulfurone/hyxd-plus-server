@@ -58,6 +58,23 @@ def install(player, state, log):
     def entry(robot):
         return state.get('local_targets', {}).get(robot.id, {})
 
+    original_hurt = getattr(robot_cls, '_hypOriginalLocalHitReaction', robot_cls.playHittedAction)
+    robot_cls._hypOriginalLocalHitReaction = original_hurt
+
+    def play_hit_reaction(robot, *args, **kwargs):
+        if local(robot):
+            info = entry(robot)
+            now = time.time()
+            if robot.hp <= 0 or now < info.get('hit_reaction_until', 0):
+                return
+            # Native ray hits can arrive several times per frame. Let one
+            # additive play through without having movement or aim restart it.
+            info['hit_reaction_until'] = now + 0.45
+            robot.fireTarget = 0
+        return original_hurt(robot, *args, **kwargs)
+
+    robot_cls.playHittedAction = play_hit_reaction
+
     for name in ('bulletCnt', 'bulletMaxCnt', 'bulletInBag'):
         original = getattr(gun_cls, '_hypLocalOriginal_' + name, getattr(gun_cls, name))
         setattr(gun_cls, '_hypLocalOriginal_' + name, original)
@@ -93,7 +110,7 @@ def install(player, state, log):
             return original_suggest(robot, direction)
         info = entry(robot)
         transform = info.get('motion_matrix')
-        if transform is not None:
+        if transform is not None and time.time() >= info.get('hit_reaction_until', 0):
             position = tuple(robot.position)
             transform.setRotateY(direction[1])
             transform.translation = Math.Vector3(*position)
@@ -277,7 +294,7 @@ def install(player, state, log):
                     continue
                 elapsed = max(0, min(0.25, now - info.get('last_tick', now)))
                 info['last_tick'] = now
-                if not active:
+                if not active or now < info.get('hit_reaction_until', 0):
                     robot.fireTarget = 0
                     continue
                 robot.fireTarget = owner.id

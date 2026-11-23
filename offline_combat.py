@@ -120,6 +120,10 @@ def install(player, state, log):
         entry['defeated'] = True
         if credited:
             state['battle_kills'] = state.get('battle_kills', 0) + 1
+        # Let the native death ragdoll take over before set_lifeCode activates it.
+        if entry.pop('motion_matrix', None) is not None:
+            target.filter.followTarget = None
+            target.fireTarget = 0
         old_life = target.lifeCode
         target.lifeCode = constants.LIFECODE_DEAD
         target.set_lifeCode(old_life)

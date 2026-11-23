@@ -72,11 +72,15 @@ class FlightTests(unittest.TestCase):
         self.pending = []
 
         def create(*args):
-            self.entities[42] = SimpleNamespace(id=42, model=Model(), firstModelFinish=True)
+            self.entities[42] = SimpleNamespace(id=42, model=Model(), firstModelFinish=True,
+                                               setPlanePath=Mock(), position=args[3])
             return 42
 
         self.camera = SimpleNamespace(position=(1000, 600, 1000))
         self.cam = SimpleNamespace(resetCamera=Mock(), cc=SimpleNamespace(target=None))
+        self.clientcom = SimpleNamespace(getPlaneEntity=Mock(return_value=None))
+        ui = SimpleNamespace(littleMap=SimpleNamespace(refreshAirline=NativeMethod(
+            Mock(), {'clientcom': self.clientcom})))
         self.player_matrix = object()
         self.engine = SimpleNamespace(player=lambda: self.owner, entities=self.entities,
             createEntity=Mock(side_effect=create), destroyEntity=lambda eid: self.entities.pop(eid, None),
@@ -85,7 +89,7 @@ class FlightTests(unittest.TestCase):
             PlayerMatrix=lambda: self.player_matrix, Servo=lambda matrix: SimpleNamespace(target=matrix))
         patcher = patch.dict(sys.modules, {'BigWorld': self.engine,
             'Math': SimpleNamespace(Matrix=Matrix, Vector3=lambda *xyz: xyz),
-            'gameglobal': SimpleNamespace(isOffline=True, rds=SimpleNamespace(cam=self.cam))})
+            'gameglobal': SimpleNamespace(isOffline=True, rds=SimpleNamespace(cam=self.cam, ui=ui))})
         patcher.start()
         self.addCleanup(patcher.stop)
         spec = importlib.util.spec_from_file_location('_flight_test', Path(__file__).with_name('offline_flight.py'))
@@ -130,17 +134,61 @@ class FlightTests(unittest.TestCase):
         self.assertEqual(self.owner.avatarStatus, 3)
         self.assertEqual(self.owner.boardingPlaneId, 0)
 
-    def test_plane_cleanup_does_not_query_none_or_end_parachuting(self):
+    def test_plane_stays_in_flight_after_player_jumps_and_lands(self):
         self.depart()
         self.now += 9
         self.update()
-        self.assertNotIn(42, self.entities)
-        self.update()
+        self.assertIn(42, self.entities)
         self.assertEqual(self.state['local_flight']['phase'], 'parachuting')
         self.assertEqual(self.owner.avatarStatus, 3)
         self.owner.avatarStatus = 5
         self.update()
         self.assertNotIn('local_flight', self.state)
+        self.assertIn(42, self.entities)
+        departing = self.state['departing_transport']
+        self.now = departing['started'] + departing['route']['duration'] + 1
+        self.update()
+        self.assertEqual(departing['matrix'].translation, departing['route']['destination'])
+        self.assertNotIn('departing_transport', self.state)
+        self.assertNotIn(42, self.entities)
+        self.update()
+
+    def test_native_route_starts_and_ends_at_opposite_edges_regardless_of_spawn(self):
+        self.board()
+        route = self.state['local_flight']['route']
+        self.assertEqual(route['source'], (0, 600, -3840))
+        self.assertEqual(route['destination'], (0, 600, 3840))
+        self.assertEqual(self.owner.planeRouteData[0]['pos'], route['source'])
+        self.assertEqual(self.owner.planeRouteData[-1]['pos'], route['destination'])
+
+    def test_original_map_lookup_tracks_moving_transform_not_plane_spawn(self):
+        self.board()
+        route = self.state['local_flight']['route']
+        plane = self.entities[42]
+        plane.setPlanePath.assert_called_once_with()
+        self.assertEqual(self.clientcom.getPlaneEntity().position, route['source'])
+        self.now += 5
+        self.owner.position = self.flight.route_at(route, 5)
+        self.update()
+        view = self.clientcom.getPlaneEntity()
+        self.assertEqual(view.id, plane.id)
+        self.assertEqual(view.position, self.owner.position)
+        self.assertNotEqual(view.position, plane.position)
+        self.assertTrue(self.commands.startParachuting())
+        self.owner.avatarStatus = 5
+        self.update()
+        self.assertEqual(self.clientcom.getPlaneEntity().position, self.owner.position)
+        self.now += route['duration']
+        self.update()
+        self.assertIsNone(self.clientcom.getPlaneEntity())
+
+    def test_diagonal_route_honors_a_rectangular_map_with_an_offset(self):
+        import math
+        route = self.flight.map_route((100, 1000, 1200, 400), math.pi / 4, 600)
+        self.assertAlmostEqual(route['source'][0], 540)
+        self.assertAlmostEqual(route['source'][2], 640)
+        self.assertAlmostEqual(route['destination'][0], 860)
+        self.assertAlmostEqual(route['destination'][2], 960)
 
     def test_camera_switches_to_current_player_after_body_replacement(self):
         self.depart()

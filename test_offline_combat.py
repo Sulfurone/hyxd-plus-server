@@ -154,6 +154,20 @@ class CombatBridgeTests(unittest.TestCase):
         self.assertFalse(self.commands.attackWithRayWeapon(0, (), (), (), 1, 42, 5 << 5, ()))
         self.callbacks.assert_called_once()
 
+    def test_robot_follow_motor_detaches_before_native_ragdoll_starts(self):
+        target = self.target()
+        target.filter = SimpleNamespace(followTarget=object())
+        target.fireTarget = 1
+        self.state['local_targets'][42]['motion_matrix'] = target.filter.followTarget
+
+        def on_death(old):
+            self.assertIsNone(target.filter.followTarget)
+            self.assertEqual(target.fireTarget, 0)
+
+        target.set_lifeCode.side_effect = on_death
+        self.commands.attackWithRayWeapon(0, (), (), (), 1, 42, 1 << 5, ())
+        target.set_lifeCode.assert_called_once()
+
     def test_head_damage_and_distributed_hits_use_native_hit_reports(self):
         target = self.target()
         self.commands.attackWithDestributeWeapon(0, (), (), [()], 1, [42], [1 << 5], [()])

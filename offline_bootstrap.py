@@ -18,6 +18,7 @@ GENERATION = gameglobal._hypOfflineGeneration
 gameglobal._hypOfflineMotionGeneration = getattr(gameglobal, '_hypOfflineMotionGeneration', 0) + 1
 STATE = getattr(gameglobal, '_hypLocalOffline', {})
 gameglobal._hypLocalOffline = STATE
+STATE.setdefault('lobby_visited', bool(STATE.get('ready')))
 _last_position = None
 _last_facing = None
 _last_facing_time = 0
@@ -48,6 +49,14 @@ def install_lobby(player):
     scope = {}
     execfile('I:/hyxd/hyp/_local_server/offline_lobby.py', scope)
     return scope['install'](player, STATE, log)
+
+
+def enable_battle_terrain():
+    # Same terrain renderer initialization as the native login video setup.
+    BigWorld.renderTerrainUFO(True)
+    BigWorld.setTerrainRenderLevel(4)
+    BigWorld.terrainNormalMapViewDist(700)
+    BigWorld.setTerrainEnable(True)
 
 
 def bind_model(player):
@@ -145,7 +154,7 @@ def run():
             player.enterWorld()
         BigWorld.camera().spaceID = player.spaceID
         BigWorld.darkWorld(False)
-        BigWorld.setTerrainEnable(True)
+        enable_battle_terrain()
         BigWorld.setFloraEnable(True)
         BigWorld.worldDrawEnabled(True)
         sources = getattr(player.model, 'sources', ()) if player.model else ()
@@ -233,7 +242,17 @@ def run():
         round_scope['install'](player, STATE, log)
         show_lobby = install_lobby(player)
         if not STATE.get('lobby_visited'):
-            show_lobby()
+            def open_initial_lobby():
+                if not current() or BigWorld.player() is not player or STATE.get('lobby_visited'):
+                    return
+                # The avatar model and collision are ready before the native
+                # terrain loader finishes. Keep the battle camera in its own
+                # space until _onLoaded completes the remaining streaming.
+                if not player.isOnLoaded or player.ap.inLoadingProgress:
+                    BigWorld.callback(0.5, open_initial_lobby)
+                    return
+                show_lobby()
+            open_initial_lobby()
         weapon = player.getActivedWeapon()
         if weapon and hasattr(weapon, 'waitRealThrow') and weapon.isThrow:
             log('Completing stalled local grenade throw')
